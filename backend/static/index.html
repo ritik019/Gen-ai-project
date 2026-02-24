@@ -3,273 +3,459 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Restaurant Recommendations</title>
+<title>Foodie AI - Smart Restaurant Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #f5f5f5;
-    color: #333;
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
     min-height: 100vh;
   }
 
+  /* --- Header --- */
   header {
-    background: #1a1a2e;
-    color: #fff;
-    padding: 1.2rem 2rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 2.5rem 2rem 2rem;
     text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
   }
-  header h1 { font-size: 1.5rem; font-weight: 600; }
-  header p { font-size: 0.85rem; color: #aaa; margin-top: 0.3rem; }
+  .logo { font-size: 2rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+  .logo span { color: #f97316; }
+  header p { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem; }
 
+  /* --- Layout --- */
   .container {
-    max-width: 1100px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
     display: grid;
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 360px 1fr;
     gap: 2rem;
     align-items: start;
   }
 
   /* --- Form Panel --- */
   .form-panel {
-    background: #fff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 1.8rem;
+    border: 1px solid rgba(255,255,255,0.06);
     position: sticky;
-    top: 1rem;
+    top: 1.5rem;
   }
-  .form-panel h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #1a1a2e; }
+  .form-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .form-title::before { content: '\1F50D'; font-size: 1.1rem; }
 
-  .field { margin-bottom: 1.2rem; }
+  .field { margin-bottom: 1.4rem; }
   .field label {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #555;
+    color: rgba(255,255,255,0.45);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.4rem;
+    letter-spacing: 0.8px;
+    margin-bottom: 0.5rem;
   }
 
   select, input[type="text"], input[type="number"] {
     width: 100%;
-    padding: 0.55rem 0.7rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
     font-size: 0.9rem;
-    background: #fafafa;
-    transition: border-color 0.2s;
+    font-family: inherit;
+    background: rgba(255,255,255,0.04);
+    color: #e0e0e0;
+    transition: all 0.2s;
   }
-  select:focus, input:focus { outline: none; border-color: #6c63ff; }
+  select option { background: #1a1a2e; color: #e0e0e0; }
+  select:focus, input:focus {
+    outline: none;
+    border-color: #f97316;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+  }
 
   /* Price chips */
-  .chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .chips { display: flex; gap: 0.5rem; }
   .chip {
-    padding: 0.4rem 0.9rem;
-    border: 2px solid #ddd;
-    border-radius: 20px;
+    flex: 1;
+    padding: 0.5rem;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    transition: all 0.15s;
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    transition: all 0.2s;
     user-select: none;
   }
-  .chip:hover { border-color: #6c63ff; }
-  .chip.active { background: #6c63ff; color: #fff; border-color: #6c63ff; }
+  .chip:hover { border-color: rgba(249,115,22,0.4); color: #f97316; }
+  .chip.active {
+    background: rgba(249,115,22,0.15);
+    color: #f97316;
+    border-color: #f97316;
+  }
 
   /* Rating slider */
   .slider-row { display: flex; align-items: center; gap: 0.8rem; }
-  .slider-row input[type="range"] { flex: 1; accent-color: #6c63ff; }
+  .slider-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.1);
+    outline: none;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f97316;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(249,115,22,0.4);
+  }
   .slider-val {
-    min-width: 2rem;
+    min-width: 2.5rem;
     text-align: center;
-    font-weight: 600;
-    color: #6c63ff;
-    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f97316;
+    font-size: 1rem;
+    background: rgba(249,115,22,0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
   }
 
   /* Cuisine multi-select */
   .cuisine-select { position: relative; }
   .cuisine-input {
     width: 100%;
-    padding: 0.55rem 0.7rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
     font-size: 0.9rem;
-    background: #fafafa;
+    font-family: inherit;
+    background: rgba(255,255,255,0.04);
+    color: #e0e0e0;
+  }
+  .cuisine-input:focus {
+    outline: none;
+    border-color: #f97316;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
   }
   .cuisine-dropdown {
     display: none;
     position: absolute;
-    top: 100%;
+    top: calc(100% + 4px);
     left: 0;
     right: 0;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    max-height: 180px;
+    background: #1e1e32;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    max-height: 200px;
     overflow-y: auto;
-    z-index: 10;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   }
   .cuisine-dropdown.open { display: block; }
+  .cuisine-dropdown::-webkit-scrollbar { width: 6px; }
+  .cuisine-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
   .cuisine-option {
-    padding: 0.45rem 0.7rem;
+    padding: 0.5rem 0.85rem;
     cursor: pointer;
     font-size: 0.85rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
+    color: rgba(255,255,255,0.7);
+    transition: background 0.15s;
   }
-  .cuisine-option:hover { background: #f0f0ff; }
-  .cuisine-option input { accent-color: #6c63ff; }
-  .selected-cuisines { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+  .cuisine-option:hover { background: rgba(249,115,22,0.1); color: #fff; }
+  .cuisine-option input { accent-color: #f97316; }
+  .selected-cuisines { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
   .cuisine-tag {
-    background: #eee;
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
+    background: rgba(249,115,22,0.15);
+    color: #f97316;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
     font-size: 0.75rem;
+    font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.4rem;
   }
   .cuisine-tag .remove {
     cursor: pointer;
     font-weight: 700;
-    color: #999;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    opacity: 0.6;
+    transition: opacity 0.15s;
   }
-  .cuisine-tag .remove:hover { color: #e74c3c; }
+  .cuisine-tag .remove:hover { opacity: 1; }
 
   /* Search button */
   .btn-search {
     width: 100%;
-    padding: 0.75rem;
-    background: #6c63ff;
+    padding: 0.85rem;
+    background: linear-gradient(135deg, #f97316, #ea580c);
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 1rem;
     font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(249,115,22,0.3);
   }
-  .btn-search:hover { background: #5a52d5; }
-  .btn-search:disabled { background: #b0addb; cursor: not-allowed; }
+  .btn-search:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(249,115,22,0.4); }
+  .btn-search:active { transform: translateY(0); }
+  .btn-search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Clear filters */
+  .btn-clear {
+    width: 100%;
+    padding: 0.6rem;
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 0.6rem;
+    transition: all 0.2s;
+  }
+  .btn-clear:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.2); }
 
   /* --- Results Panel --- */
-  .results-panel { min-height: 200px; }
+  .results-panel { min-height: 300px; }
 
   .results-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 1.2rem;
+  }
+  .results-header h2 { font-size: 1.15rem; font-weight: 600; color: #fff; }
+  .results-count {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.05);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+  }
+
+  /* Active filters display */
+  .active-filters {
+    display: none;
+    flex-wrap: wrap;
+    gap: 0.4rem;
     margin-bottom: 1rem;
   }
-  .results-header h2 { font-size: 1.1rem; color: #1a1a2e; }
-  .results-count { font-size: 0.8rem; color: #888; }
+  .active-filters.show { display: flex; }
+  .filter-tag {
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+  }
 
   .spinner {
     display: none;
     text-align: center;
-    padding: 3rem 0;
-    color: #888;
+    padding: 5rem 0;
   }
   .spinner.show { display: block; }
-  .spinner::after {
-    content: '';
+  .spinner-dot {
     display: inline-block;
-    width: 32px;
-    height: 32px;
-    border: 3px solid #ddd;
-    border-top-color: #6c63ff;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    animation: spin 0.6s linear infinite;
+    background: #f97316;
+    margin: 0 4px;
+    animation: bounce 1.4s ease-in-out infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-dot:nth-child(2) { animation-delay: 0.2s; }
+  .spinner-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+  .spinner-text { color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-top: 1rem; }
 
   .empty-state {
     display: none;
     text-align: center;
-    padding: 3rem 0;
-    color: #999;
-    font-size: 0.95rem;
+    padding: 4rem 2rem;
+    color: rgba(255,255,255,0.35);
   }
   .empty-state.show { display: block; }
+  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+  .empty-state p { font-size: 0.9rem; }
 
   .welcome-state {
     text-align: center;
-    padding: 4rem 1rem;
-    color: #aaa;
+    padding: 5rem 2rem;
+    color: rgba(255,255,255,0.25);
   }
-  .welcome-state p { font-size: 0.95rem; }
+  .welcome-state .welcome-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .welcome-state h3 { color: rgba(255,255,255,0.5); font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .welcome-state p { font-size: 0.85rem; }
 
-  /* Restaurant card */
+  /* --- Restaurant Card --- */
   .card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 1.2rem 1.4rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    transition: box-shadow 0.2s;
+    background: #1a1a2e;
+    border-radius: 14px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 0.8rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: all 0.2s;
+    position: relative;
   }
-  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .card:hover {
+    border-color: rgba(249,115,22,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  }
 
-  .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .card-name { font-size: 1.1rem; font-weight: 600; color: #1a1a2e; }
-  .card-score { font-size: 0.75rem; color: #aaa; }
+  .card-rank {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.15);
+  }
 
-  .card-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0; }
-  .badge {
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+  .card-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.6rem;
+    padding-right: 3rem;
+  }
+
+  .card-stats {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 0.7rem;
+    flex-wrap: wrap;
+  }
+  .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
     font-weight: 600;
   }
-  .badge-rating { background: #e8f5e9; color: #2e7d32; }
-  .badge-price { background: #fff3e0; color: #e65100; }
-  .badge-locality { background: #e3f2fd; color: #1565c0; }
-  .badge-cuisine { background: #f3e5f5; color: #7b1fa2; }
-
-  .card-address { font-size: 0.8rem; color: #888; margin: 0.4rem 0; }
-
-  .card-reason {
-    font-style: italic;
-    color: #555;
-    font-size: 0.88rem;
-    margin-top: 0.6rem;
-    padding-top: 0.6rem;
-    border-top: 1px solid #f0f0f0;
+  .stat-rating {
+    background: rgba(34,197,94,0.12);
+    color: #4ade80;
+  }
+  .stat-price {
+    background: rgba(249,115,22,0.12);
+    color: #fb923c;
+  }
+  .stat-locality {
+    background: rgba(99,102,241,0.12);
+    color: #a5b4fc;
   }
 
+  .card-cuisines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.6rem;
+  }
+  .ctag {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.5);
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+  }
+
+  .card-address {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.25);
+    margin-bottom: 0.5rem;
+  }
+
+  .card-reason {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.85rem;
+    margin-top: 0.8rem;
+    padding: 0.8rem;
+    background: rgba(249,115,22,0.06);
+    border-radius: 8px;
+    border-left: 3px solid #f97316;
+    line-height: 1.5;
+  }
+  .card-reason::before { content: 'AI says: '; font-weight: 600; color: #f97316; }
+
+  .card-score-bar {
+    margin-top: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .score-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .score-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #f97316, #fbbf24);
+    transition: width 0.5s ease;
+  }
+  .score-label { font-size: 0.7rem; color: rgba(255,255,255,0.3); min-width: 3rem; text-align: right; }
+
   /* Responsive */
-  @media (max-width: 768px) {
+  @media (max-width: 800px) {
     .container { grid-template-columns: 1fr; }
     .form-panel { position: static; }
+    header { padding: 2rem 1.5rem 1.5rem; }
+    .logo { font-size: 1.6rem; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Restaurant Recommendations</h1>
-  <p>AI-powered restaurant finder for Bangalore</p>
+  <div class="logo">Foodie<span>AI</span></div>
+  <p>AI-powered restaurant recommendations for Bangalore</p>
 </header>
 
 <div class="container">
   <!-- Form Panel -->
   <div class="form-panel">
-    <h2>Find Restaurants</h2>
+    <div class="form-title">Search Restaurants</div>
 
     <div class="field">
       <label>Location</label>
       <select id="location">
-        <option value="">Select area...</option>
+        <option value="">Choose an area...</option>
       </select>
     </div>
 
@@ -287,40 +473,57 @@
       <label>Minimum Rating</label>
       <div class="slider-row">
         <input type="range" id="minRating" min="0" max="5" step="0.5" value="0">
-        <span class="slider-val" id="ratingVal">0</span>
+        <span class="slider-val" id="ratingVal">Any</span>
       </div>
     </div>
 
     <div class="field">
       <label>Cuisines</label>
       <div class="cuisine-select" id="cuisineSelect">
-        <input type="text" class="cuisine-input" id="cuisineInput" placeholder="Search cuisines..." autocomplete="off">
+        <input type="text" class="cuisine-input" id="cuisineInput" placeholder="Type to search cuisines..." autocomplete="off">
         <div class="cuisine-dropdown" id="cuisineDropdown"></div>
       </div>
       <div class="selected-cuisines" id="selectedCuisines"></div>
     </div>
 
     <div class="field">
-      <label>Special Preferences</label>
-      <input type="text" id="freeText" placeholder="e.g. romantic, rooftop, live music">
+      <label>Describe what you want</label>
+      <input type="text" id="freeText" placeholder="e.g. cozy date night, rooftop vibes...">
     </div>
 
     <div class="field">
-      <label>Results Limit</label>
+      <label>Max Results</label>
       <input type="number" id="limit" value="10" min="1" max="50">
     </div>
 
-    <button class="btn-search" id="searchBtn">Search</button>
+    <button class="btn-search" id="searchBtn">Find Restaurants</button>
+    <button class="btn-clear" id="clearBtn">Clear All Filters</button>
   </div>
 
   <!-- Results Panel -->
   <div class="results-panel">
     <div class="welcome-state" id="welcome">
-      <p>Select a location and hit Search to get recommendations.</p>
+      <div class="welcome-icon">&#127860;</div>
+      <h3>Discover your next meal</h3>
+      <p>Pick a location and search to get AI-powered recommendations</p>
     </div>
-    <div class="spinner" id="spinner"></div>
-    <div class="empty-state" id="emptyState">No restaurants found. Try adjusting your filters.</div>
+
+    <div class="spinner" id="spinner">
+      <div>
+        <span class="spinner-dot"></span>
+        <span class="spinner-dot"></span>
+        <span class="spinner-dot"></span>
+      </div>
+      <div class="spinner-text">Finding the best restaurants for you...</div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">&#128533;</div>
+      <p>No restaurants found. Try broadening your filters.</p>
+    </div>
+
     <div id="resultsHeader" style="display:none">
+      <div class="active-filters" id="activeFilters"></div>
       <div class="results-header">
         <h2>Recommendations</h2>
         <span class="results-count" id="resultsCount"></span>
@@ -335,12 +538,11 @@ const API = '';
 let allCuisines = [];
 let selectedCuisines = new Set();
 
-// --- Init: load metadata ---
+// --- Init ---
 async function loadMetadata() {
   try {
     const res = await fetch(`${API}/metadata`);
     const data = await res.json();
-
     const locSelect = document.getElementById('location');
     data.cities.forEach(c => {
       const opt = document.createElement('option');
@@ -348,7 +550,6 @@ async function loadMetadata() {
       opt.textContent = c;
       locSelect.appendChild(opt);
     });
-
     allCuisines = data.cuisines;
     renderCuisineDropdown(allCuisines);
   } catch (e) {
@@ -358,15 +559,15 @@ async function loadMetadata() {
 
 // --- Price chips ---
 document.getElementById('priceChips').addEventListener('click', e => {
-  if (e.target.classList.contains('chip')) {
-    e.target.classList.toggle('active');
-  }
+  if (e.target.classList.contains('chip')) e.target.classList.toggle('active');
 });
 
 // --- Rating slider ---
 const ratingSlider = document.getElementById('minRating');
 const ratingVal = document.getElementById('ratingVal');
-ratingSlider.addEventListener('input', () => { ratingVal.textContent = ratingSlider.value; });
+ratingSlider.addEventListener('input', () => {
+  ratingVal.textContent = ratingSlider.value == 0 ? 'Any' : ratingSlider.value;
+});
 
 // --- Cuisine multi-select ---
 const cuisineInput = document.getElementById('cuisineInput');
@@ -378,7 +579,7 @@ function renderCuisineDropdown(list) {
     const div = document.createElement('div');
     div.className = 'cuisine-option';
     div.innerHTML = `<input type="checkbox" ${selectedCuisines.has(c) ? 'checked' : ''}><span>${c}</span>`;
-    div.addEventListener('click', () => toggleCuisine(c));
+    div.addEventListener('click', (e) => { e.stopPropagation(); toggleCuisine(c); });
     cuisineDropdown.appendChild(div);
   });
 }
@@ -397,7 +598,7 @@ function renderSelectedTags() {
     const tag = document.createElement('span');
     tag.className = 'cuisine-tag';
     tag.innerHTML = `${c} <span class="remove">&times;</span>`;
-    tag.querySelector('.remove').addEventListener('click', () => toggleCuisine(c));
+    tag.querySelector('.remove').addEventListener('click', (e) => { e.stopPropagation(); toggleCuisine(c); });
     container.appendChild(tag);
   });
 }
@@ -418,12 +619,35 @@ document.addEventListener('click', e => {
   }
 });
 
+// --- Clear all ---
+document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('location').value = '';
+  document.querySelectorAll('#priceChips .chip').forEach(c => c.classList.remove('active'));
+  ratingSlider.value = 0;
+  ratingVal.textContent = 'Any';
+  selectedCuisines.clear();
+  renderSelectedTags();
+  cuisineInput.value = '';
+  renderCuisineDropdown(allCuisines);
+  document.getElementById('freeText').value = '';
+  document.getElementById('limit').value = 10;
+});
+
 // --- Search ---
 document.getElementById('searchBtn').addEventListener('click', doSearch);
 
+// Allow Enter key to trigger search
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName !== 'SELECT') doSearch();
+});
+
 async function doSearch() {
   const location = document.getElementById('location').value;
-  if (!location) { alert('Please select a location.'); return; }
+  if (!location) {
+    document.getElementById('location').style.borderColor = '#ef4444';
+    setTimeout(() => document.getElementById('location').style.borderColor = '', 2000);
+    return;
+  }
 
   const priceRange = [...document.querySelectorAll('#priceChips .chip.active')].map(c => c.dataset.value);
   const minRating = parseFloat(document.getElementById('minRating').value);
@@ -446,6 +670,7 @@ async function doSearch() {
   document.getElementById('cardList').innerHTML = '';
   document.getElementById('spinner').classList.add('show');
   document.getElementById('searchBtn').disabled = true;
+  document.getElementById('searchBtn').textContent = 'Searching...';
 
   try {
     const res = await fetch(`${API}/recommendations`, {
@@ -454,15 +679,36 @@ async function doSearch() {
       body: JSON.stringify(body),
     });
     const data = await res.json();
+    renderActiveFilters(body);
     renderResults(data);
   } catch (e) {
     console.error(e);
-    document.getElementById('emptyState').textContent = 'Something went wrong. Please try again.';
+    document.getElementById('emptyState').querySelector('p').textContent = 'Something went wrong. Please try again.';
     document.getElementById('emptyState').classList.add('show');
   } finally {
     document.getElementById('spinner').classList.remove('show');
     document.getElementById('searchBtn').disabled = false;
+    document.getElementById('searchBtn').textContent = 'Find Restaurants';
   }
+}
+
+function renderActiveFilters(body) {
+  const container = document.getElementById('activeFilters');
+  container.innerHTML = '';
+  const tags = [];
+  tags.push(body.location);
+  if (body.price_range) tags.push(body.price_range.join(' '));
+  if (body.min_rating > 0) tags.push(`${body.min_rating}+ stars`);
+  if (body.cuisines.length) body.cuisines.forEach(c => tags.push(c));
+  if (body.free_text_preferences) tags.push(`"${body.free_text_preferences}"`);
+
+  tags.forEach(t => {
+    const tag = document.createElement('span');
+    tag.className = 'filter-tag';
+    tag.textContent = t;
+    container.appendChild(tag);
+  });
+  container.classList.add('show');
 }
 
 function renderResults(data) {
@@ -476,32 +722,35 @@ function renderResults(data) {
 
   document.getElementById('resultsHeader').style.display = 'block';
   document.getElementById('resultsCount').textContent =
-    `Showing ${data.recommendations.length} of ${data.total_candidates} matches`;
+    `${data.recommendations.length} of ${data.total_candidates}`;
 
   data.recommendations.forEach((item, i) => {
     const r = item.restaurant;
     const card = document.createElement('div');
     card.className = 'card';
 
-    const cuisineBadges = r.cuisines.map(c => `<span class="badge badge-cuisine">${c}</span>`).join('');
-    const ratingBadge = r.avg_rating != null
-      ? `<span class="badge badge-rating">${r.avg_rating.toFixed(1)} &#9733;</span>` : '';
+    const cuisineTags = r.cuisines.map(c => `<span class="ctag">${c}</span>`).join('');
+    const ratingHtml = r.avg_rating != null
+      ? `<span class="stat stat-rating">&#9733; ${r.avg_rating.toFixed(1)}</span>` : '';
     const reasonHtml = item.reason
-      ? `<div class="card-reason">"${item.reason}"</div>` : '';
+      ? `<div class="card-reason">${item.reason}</div>` : '';
+    const scorePercent = Math.min(100, Math.round(item.score * 100));
 
     card.innerHTML = `
-      <div class="card-top">
-        <span class="card-name">${r.name}</span>
-        <span class="card-score">Score: ${item.score.toFixed(3)}</span>
+      <div class="card-rank">#${i + 1}</div>
+      <div class="card-name">${r.name}</div>
+      <div class="card-stats">
+        ${ratingHtml}
+        <span class="stat stat-price">${r.price_bucket}${r.avg_cost_for_two ? ' ~ \u20B9' + r.avg_cost_for_two : ''}</span>
+        <span class="stat stat-locality">${r.locality}</span>
       </div>
-      <div class="card-meta">
-        ${ratingBadge}
-        <span class="badge badge-price">${r.price_bucket}</span>
-        <span class="badge badge-locality">${r.locality}</span>
-        ${cuisineBadges}
-      </div>
+      <div class="card-cuisines">${cuisineTags}</div>
       <div class="card-address">${r.address}</div>
       ${reasonHtml}
+      <div class="card-score-bar">
+        <div class="score-track"><div class="score-fill" style="width:${scorePercent}%"></div></div>
+        <span class="score-label">${scorePercent}%</span>
+      </div>
     `;
     list.appendChild(card);
   });
