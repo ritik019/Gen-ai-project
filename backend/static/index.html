@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant Recommendations</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 1.2rem 2rem;
+    text-align: center;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 600; }
+  header p { font-size: 0.85rem; color: #aaa; margin-top: 0.3rem; }
+
+  .container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  /* --- Form Panel --- */
+  .form-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 1rem;
+  }
+  .form-panel h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #1a1a2e; }
+
+  .field { margin-bottom: 1.2rem; }
+  .field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
+  }
+
+  select, input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #fafafa;
+    transition: border-color 0.2s;
+  }
+  select:focus, input:focus { outline: none; border-color: #6c63ff; }
+
+  /* Price chips */
+  .chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .chip {
+    padding: 0.4rem 0.9rem;
+    border: 2px solid #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .chip:hover { border-color: #6c63ff; }
+  .chip.active { background: #6c63ff; color: #fff; border-color: #6c63ff; }
+
+  /* Rating slider */
+  .slider-row { display: flex; align-items: center; gap: 0.8rem; }
+  .slider-row input[type="range"] { flex: 1; accent-color: #6c63ff; }
+  .slider-val {
+    min-width: 2rem;
+    text-align: center;
+    font-weight: 600;
+    color: #6c63ff;
+    font-size: 0.95rem;
+  }
+
+  /* Cuisine multi-select */
+  .cuisine-select { position: relative; }
+  .cuisine-input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #fafafa;
+  }
+  .cuisine-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .cuisine-dropdown.open { display: block; }
+  .cuisine-option {
+    padding: 0.45rem 0.7rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .cuisine-option:hover { background: #f0f0ff; }
+  .cuisine-option input { accent-color: #6c63ff; }
+  .selected-cuisines { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+  .cuisine-tag {
+    background: #eee;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .cuisine-tag .remove {
+    cursor: pointer;
+    font-weight: 700;
+    color: #999;
+    font-size: 0.85rem;
+  }
+  .cuisine-tag .remove:hover { color: #e74c3c; }
+
+  /* Search button */
+  .btn-search {
+    width: 100%;
+    padding: 0.75rem;
+    background: #6c63ff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-search:hover { background: #5a52d5; }
+  .btn-search:disabled { background: #b0addb; cursor: not-allowed; }
+
+  /* --- Results Panel --- */
+  .results-panel { min-height: 200px; }
+
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .results-header h2 { font-size: 1.1rem; color: #1a1a2e; }
+  .results-count { font-size: 0.8rem; color: #888; }
+
+  .spinner {
+    display: none;
+    text-align: center;
+    padding: 3rem 0;
+    color: #888;
+  }
+  .spinner.show { display: block; }
+  .spinner::after {
+    content: '';
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 3px solid #ddd;
+    border-top-color: #6c63ff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    display: none;
+    text-align: center;
+    padding: 3rem 0;
+    color: #999;
+    font-size: 0.95rem;
+  }
+  .empty-state.show { display: block; }
+
+  .welcome-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: #aaa;
+  }
+  .welcome-state p { font-size: 0.95rem; }
+
+  /* Restaurant card */
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .card-name { font-size: 1.1rem; font-weight: 600; color: #1a1a2e; }
+  .card-score { font-size: 0.75rem; color: #aaa; }
+
+  .card-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0; }
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-rating { background: #e8f5e9; color: #2e7d32; }
+  .badge-price { background: #fff3e0; color: #e65100; }
+  .badge-locality { background: #e3f2fd; color: #1565c0; }
+  .badge-cuisine { background: #f3e5f5; color: #7b1fa2; }
+
+  .card-address { font-size: 0.8rem; color: #888; margin: 0.4rem 0; }
+
+  .card-reason {
+    font-style: italic;
+    color: #555;
+    font-size: 0.88rem;
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container { grid-template-columns: 1fr; }
+    .form-panel { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Restaurant Recommendations</h1>
+  <p>AI-powered restaurant finder for Bangalore</p>
+</header>
+
+<div class="container">
+  <!-- Form Panel -->
+  <div class="form-panel">
+    <h2>Find Restaurants</h2>
+
+    <div class="field">
+      <label>Location</label>
+      <select id="location">
+        <option value="">Select area...</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Price Range</label>
+      <div class="chips" id="priceChips">
+        <span class="chip" data-value="$">$</span>
+        <span class="chip" data-value="$$">$$</span>
+        <span class="chip" data-value="$$$">$$$</span>
+        <span class="chip" data-value="$$$$">$$$$</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Minimum Rating</label>
+      <div class="slider-row">
+        <input type="range" id="minRating" min="0" max="5" step="0.5" value="0">
+        <span class="slider-val" id="ratingVal">0</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Cuisines</label>
+      <div class="cuisine-select" id="cuisineSelect">
+        <input type="text" class="cuisine-input" id="cuisineInput" placeholder="Search cuisines..." autocomplete="off">
+        <div class="cuisine-dropdown" id="cuisineDropdown"></div>
+      </div>
+      <div class="selected-cuisines" id="selectedCuisines"></div>
+    </div>
+
+    <div class="field">
+      <label>Special Preferences</label>
+      <input type="text" id="freeText" placeholder="e.g. romantic, rooftop, live music">
+    </div>
+
+    <div class="field">
+      <label>Results Limit</label>
+      <input type="number" id="limit" value="10" min="1" max="50">
+    </div>
+
+    <button class="btn-search" id="searchBtn">Search</button>
+  </div>
+
+  <!-- Results Panel -->
+  <div class="results-panel">
+    <div class="welcome-state" id="welcome">
+      <p>Select a location and hit Search to get recommendations.</p>
+    </div>
+    <div class="spinner" id="spinner"></div>
+    <div class="empty-state" id="emptyState">No restaurants found. Try adjusting your filters.</div>
+    <div id="resultsHeader" style="display:none">
+      <div class="results-header">
+        <h2>Recommendations</h2>
+        <span class="results-count" id="resultsCount"></span>
+      </div>
+    </div>
+    <div id="cardList"></div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let allCuisines = [];
+let selectedCuisines = new Set();
+
+// --- Init: load metadata ---
+async function loadMetadata() {
+  try {
+    const res = await fetch(`${API}/metadata`);
+    const data = await res.json();
+
+    const locSelect = document.getElementById('location');
+    data.cities.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      locSelect.appendChild(opt);
+    });
+
+    allCuisines = data.cuisines;
+    renderCuisineDropdown(allCuisines);
+  } catch (e) {
+    console.error('Failed to load metadata:', e);
+  }
+}
+
+// --- Price chips ---
+document.getElementById('priceChips').addEventListener('click', e => {
+  if (e.target.classList.contains('chip')) {
+    e.target.classList.toggle('active');
+  }
+});
+
+// --- Rating slider ---
+const ratingSlider = document.getElementById('minRating');
+const ratingVal = document.getElementById('ratingVal');
+ratingSlider.addEventListener('input', () => { ratingVal.textContent = ratingSlider.value; });
+
+// --- Cuisine multi-select ---
+const cuisineInput = document.getElementById('cuisineInput');
+const cuisineDropdown = document.getElementById('cuisineDropdown');
+
+function renderCuisineDropdown(list) {
+  cuisineDropdown.innerHTML = '';
+  list.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'cuisine-option';
+    div.innerHTML = `<input type="checkbox" ${selectedCuisines.has(c) ? 'checked' : ''}><span>${c}</span>`;
+    div.addEventListener('click', () => toggleCuisine(c));
+    cuisineDropdown.appendChild(div);
+  });
+}
+
+function toggleCuisine(c) {
+  if (selectedCuisines.has(c)) selectedCuisines.delete(c);
+  else selectedCuisines.add(c);
+  renderSelectedTags();
+  renderCuisineDropdown(filterCuisines(cuisineInput.value));
+}
+
+function renderSelectedTags() {
+  const container = document.getElementById('selectedCuisines');
+  container.innerHTML = '';
+  selectedCuisines.forEach(c => {
+    const tag = document.createElement('span');
+    tag.className = 'cuisine-tag';
+    tag.innerHTML = `${c} <span class="remove">&times;</span>`;
+    tag.querySelector('.remove').addEventListener('click', () => toggleCuisine(c));
+    container.appendChild(tag);
+  });
+}
+
+function filterCuisines(query) {
+  const q = query.toLowerCase();
+  return allCuisines.filter(c => c.toLowerCase().includes(q));
+}
+
+cuisineInput.addEventListener('focus', () => cuisineDropdown.classList.add('open'));
+cuisineInput.addEventListener('input', () => {
+  renderCuisineDropdown(filterCuisines(cuisineInput.value));
+  cuisineDropdown.classList.add('open');
+});
+document.addEventListener('click', e => {
+  if (!document.getElementById('cuisineSelect').contains(e.target)) {
+    cuisineDropdown.classList.remove('open');
+  }
+});
+
+// --- Search ---
+document.getElementById('searchBtn').addEventListener('click', doSearch);
+
+async function doSearch() {
+  const location = document.getElementById('location').value;
+  if (!location) { alert('Please select a location.'); return; }
+
+  const priceRange = [...document.querySelectorAll('#priceChips .chip.active')].map(c => c.dataset.value);
+  const minRating = parseFloat(document.getElementById('minRating').value);
+  const freeText = document.getElementById('freeText').value.trim() || null;
+  const limit = parseInt(document.getElementById('limit').value) || 10;
+
+  const body = {
+    location,
+    price_range: priceRange.length ? priceRange : null,
+    min_rating: minRating,
+    cuisines: [...selectedCuisines],
+    free_text_preferences: freeText,
+    limit,
+  };
+
+  // UI states
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('emptyState').classList.remove('show');
+  document.getElementById('resultsHeader').style.display = 'none';
+  document.getElementById('cardList').innerHTML = '';
+  document.getElementById('spinner').classList.add('show');
+  document.getElementById('searchBtn').disabled = true;
+
+  try {
+    const res = await fetch(`${API}/recommendations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    renderResults(data);
+  } catch (e) {
+    console.error(e);
+    document.getElementById('emptyState').textContent = 'Something went wrong. Please try again.';
+    document.getElementById('emptyState').classList.add('show');
+  } finally {
+    document.getElementById('spinner').classList.remove('show');
+    document.getElementById('searchBtn').disabled = false;
+  }
+}
+
+function renderResults(data) {
+  const list = document.getElementById('cardList');
+  list.innerHTML = '';
+
+  if (!data.recommendations || data.recommendations.length === 0) {
+    document.getElementById('emptyState').classList.add('show');
+    return;
+  }
+
+  document.getElementById('resultsHeader').style.display = 'block';
+  document.getElementById('resultsCount').textContent =
+    `Showing ${data.recommendations.length} of ${data.total_candidates} matches`;
+
+  data.recommendations.forEach((item, i) => {
+    const r = item.restaurant;
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const cuisineBadges = r.cuisines.map(c => `<span class="badge badge-cuisine">${c}</span>`).join('');
+    const ratingBadge = r.avg_rating != null
+      ? `<span class="badge badge-rating">${r.avg_rating.toFixed(1)} &#9733;</span>` : '';
+    const reasonHtml = item.reason
+      ? `<div class="card-reason">"${item.reason}"</div>` : '';
+
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-name">${r.name}</span>
+        <span class="card-score">Score: ${item.score.toFixed(3)}</span>
+      </div>
+      <div class="card-meta">
+        ${ratingBadge}
+        <span class="badge badge-price">${r.price_bucket}</span>
+        <span class="badge badge-locality">${r.locality}</span>
+        ${cuisineBadges}
+      </div>
+      <div class="card-address">${r.address}</div>
+      ${reasonHtml}
+    `;
+    list.appendChild(card);
+  });
+}
+
+// Boot
+loadMetadata();
+</script>
+</body>
+</html>

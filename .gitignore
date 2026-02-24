@@ -1,0 +1,7 @@
+.env
+__pycache__/
+.pytest_cache/
+*.pyc
+backend/data/raw/
+backend/data/processed/*.csv
+backend/data/processed/*.npy
