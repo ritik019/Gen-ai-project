@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import time
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
+from ..ab_testing.experiments import assign_variant, get_variant_weights
+from ..analytics.store import record_event
 from ..embeddings.encoder import encode_text
 from ..llm.groq_client import rank_and_explain
+from .cache import cache_get, cache_set
 from .data_store import get_dataframe, get_embeddings
 from .models import (
     RecommendationItem,
@@ -29,21 +34,21 @@ def _score_row(
     row: pd.Series,
     requested_cuisines_lower: set[str],
     requested_buckets: list[str] | None,
+    weights: dict[str, float] | None = None,
 ) -> float:
     """Compute a heuristic score for a single restaurant row."""
-    # Rating component (0-1, weight 0.6)
+    w = weights or {"rating": 0.6, "cuisine": 0.3, "price": 0.1}
+
     rating = row.get("avg_rating")
     rating_score = (float(rating) / 5.0) if pd.notna(rating) else 0.0
 
-    # Cuisine match component (0-1, weight 0.3)
     if requested_cuisines_lower:
         restaurant_cuisines: list[str] = row.get("cuisines_list", [])
         matches = sum(1 for c in restaurant_cuisines if c in requested_cuisines_lower)
         cuisine_score = matches / len(requested_cuisines_lower)
     else:
-        cuisine_score = 1.0  # no filter → full score
+        cuisine_score = 1.0
 
-    # Price alignment component (0-1, weight 0.1)
     if requested_buckets:
         bucket = row.get("price_bucket", "")
         distances = [_price_distance(bucket, b) for b in requested_buckets]
@@ -52,10 +57,35 @@ def _score_row(
     else:
         price_score = 1.0
 
-    return 0.6 * rating_score + 0.3 * cuisine_score + 0.1 * price_score
+    return w["rating"] * rating_score + w["cuisine"] * cuisine_score + w["price"] * price_score
 
 
 def get_recommendations(request: RecommendationRequest) -> RecommendationResponse:
+    start_time = time.time()
+
+    # --- A/B variant assignment ---
+    variant = assign_variant()
+    weights = get_variant_weights(variant)
+
+    # --- Cache check ---
+    request_dict = request.model_dump()
+    request_dict["_variant"] = variant  # include variant in cache key
+    cached = cache_get(request_dict)
+    if cached is not None:
+        elapsed_ms = round((time.time() - start_time) * 1000, 1)
+        record_event("search", {
+            "location": request.location,
+            "cuisines": request.cuisines,
+            "price_range": request.price_range,
+            "min_rating": request.min_rating,
+            "free_text": request.free_text_preferences,
+            "total_candidates": cached.total_candidates,
+            "results_returned": len(cached.recommendations),
+            "response_time_ms": elapsed_ms,
+            "cache_hit": True,
+        })
+        return cached
+
     df = get_dataframe()
     location_lower = request.location.strip().lower()
 
@@ -82,7 +112,21 @@ def get_recommendations(request: RecommendationRequest) -> RecommendationRespons
     total_candidates = len(candidates)
 
     if candidates.empty:
-        return RecommendationResponse(recommendations=[], total_candidates=0)
+        elapsed_ms = round((time.time() - start_time) * 1000, 1)
+        record_event("search", {
+            "location": request.location,
+            "cuisines": request.cuisines,
+            "price_range": request.price_range,
+            "min_rating": request.min_rating,
+            "free_text": request.free_text_preferences,
+            "total_candidates": 0,
+            "results_returned": 0,
+            "response_time_ms": elapsed_ms,
+            "cache_hit": False,
+        })
+        return RecommendationResponse(
+            recommendations=[], total_candidates=0, variant=variant,
+        )
 
     # --- Scoring ---
     candidates["_score"] = candidates.apply(
@@ -90,6 +134,7 @@ def get_recommendations(request: RecommendationRequest) -> RecommendationRespons
         axis=1,
         requested_cuisines_lower=req_cuisines_lower,
         requested_buckets=request.price_range,
+        weights=weights,
     )
 
     # --- Semantic scoring (when free_text_preferences provided) ---
@@ -164,7 +209,25 @@ def get_recommendations(request: RecommendationRequest) -> RecommendationRespons
             reason=llm_results.get(rid),
         ))
 
-    return RecommendationResponse(
+    response = RecommendationResponse(
         recommendations=items,
         total_candidates=total_candidates,
+        variant=variant,
     )
+
+    cache_set(request_dict, response)
+
+    elapsed_ms = round((time.time() - start_time) * 1000, 1)
+    record_event("search", {
+        "location": request.location,
+        "cuisines": request.cuisines,
+        "price_range": request.price_range,
+        "min_rating": request.min_rating,
+        "free_text": request.free_text_preferences,
+        "total_candidates": total_candidates,
+        "results_returned": len(items),
+        "response_time_ms": elapsed_ms,
+        "cache_hit": False,
+    })
+
+    return response

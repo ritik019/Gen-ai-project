@@ -38,3 +38,16 @@ class RecommendationItem(BaseModel):
 class RecommendationResponse(BaseModel):
     recommendations: list[RecommendationItem]
     total_candidates: int
+    variant: str | None = None
+
+
+class FeedbackRequest(BaseModel):
+    restaurant_id: str = Field(..., min_length=1)
+    query_location: str = Field(..., min_length=1)
+    is_positive: bool
+    variant: str | None = None
+
+
+class FeedbackResponse(BaseModel):
+    status: str
+    total_feedback: int

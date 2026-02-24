@@ -18,13 +18,33 @@
   /* --- Header --- */
   header {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    padding: 2.5rem 2rem 2rem;
+    padding: 2rem 2rem 0;
     text-align: center;
     border-bottom: 1px solid rgba(255,255,255,0.05);
   }
   .logo { font-size: 2rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
   .logo span { color: #f97316; }
-  header p { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem; }
+  header .subtitle { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem; }
+
+  /* Nav tabs */
+  .nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-top: 1.5rem;
+  }
+  .nav-tab {
+    padding: 0.7rem 1.8rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .nav-tab:hover { color: rgba(255,255,255,0.7); }
+  .nav-tab.active { color: #f97316; border-bottom-color: #f97316; }
 
   /* --- Layout --- */
   .container {
@@ -36,6 +56,10 @@
     gap: 2rem;
     align-items: start;
   }
+
+  .view { display: none; }
+  .view.active { display: block; }
+  .view-search.active { display: grid; grid-template-columns: 360px 1fr; gap: 2rem; align-items: start; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
 
   /* --- Form Panel --- */
   .form-panel {
@@ -55,7 +79,6 @@
     align-items: center;
     gap: 0.5rem;
   }
-  .form-title::before { content: '\1F50D'; font-size: 1.1rem; }
 
   .field { margin-bottom: 1.4rem; }
   .field label {
@@ -205,7 +228,7 @@
   }
   .cuisine-tag .remove:hover { opacity: 1; }
 
-  /* Search button */
+  /* Buttons */
   .btn-search {
     width: 100%;
     padding: 0.85rem;
@@ -224,7 +247,6 @@
   .btn-search:active { transform: translateY(0); }
   .btn-search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  /* Clear filters */
   .btn-clear {
     width: 100%;
     padding: 0.6rem;
@@ -248,8 +270,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   .results-header h2 { font-size: 1.15rem; font-weight: 600; color: #fff; }
+  .results-meta { display: flex; align-items: center; gap: 0.5rem; }
   .results-count {
     font-size: 0.8rem;
     color: rgba(255,255,255,0.4);
@@ -257,8 +282,29 @@
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
   }
+  .variant-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #818cf8;
+    background: rgba(99,102,241,0.15);
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+  }
+  .btn-share {
+    padding: 0.3rem 0.75rem;
+    background: transparent;
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 8px;
+    color: #f97316;
+    font-size: 0.78rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-share:hover { background: rgba(249,115,22,0.1); }
 
-  /* Active filters display */
+  /* Active filters */
   .active-filters {
     display: none;
     flex-wrap: wrap;
@@ -306,7 +352,6 @@
   }
   .empty-state.show { display: block; }
   .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
-  .empty-state p { font-size: 0.9rem; }
 
   .welcome-state {
     text-align: center;
@@ -365,18 +410,9 @@
     font-size: 0.78rem;
     font-weight: 600;
   }
-  .stat-rating {
-    background: rgba(34,197,94,0.12);
-    color: #4ade80;
-  }
-  .stat-price {
-    background: rgba(249,115,22,0.12);
-    color: #fb923c;
-  }
-  .stat-locality {
-    background: rgba(99,102,241,0.12);
-    color: #a5b4fc;
-  }
+  .stat-rating { background: rgba(34,197,94,0.12); color: #4ade80; }
+  .stat-price { background: rgba(249,115,22,0.12); color: #fb923c; }
+  .stat-locality { background: rgba(99,102,241,0.12); color: #a5b4fc; }
 
   .card-cuisines {
     display: flex;
@@ -431,12 +467,201 @@
   }
   .score-label { font-size: 0.7rem; color: rgba(255,255,255,0.3); min-width: 3rem; text-align: right; }
 
+  /* Card actions (feedback + save) */
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  .fb-btn {
+    padding: 0.35rem 0.7rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    color: rgba(255,255,255,0.4);
+  }
+  .fb-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+  .fb-btn.selected-up { background: rgba(34,197,94,0.15); border-color: #4ade80; color: #4ade80; }
+  .fb-btn.selected-down { background: rgba(239,68,68,0.15); border-color: #f87171; color: #f87171; }
+  .fb-btn:disabled { opacity: 0.5; cursor: default; }
+  .save-btn {
+    margin-left: auto;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    color: rgba(255,255,255,0.4);
+  }
+  .save-btn:hover { border-color: rgba(255,255,255,0.2); color: #fbbf24; }
+  .save-btn.saved { color: #fbbf24; border-color: #fbbf24; background: rgba(251,191,36,0.1); }
+
+  /* --- Toast --- */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #1a1a2e;
+    border: 1px solid rgba(249,115,22,0.3);
+    color: #fff;
+    padding: 0.8rem 1.4rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ========== ANALYTICS VIEW ========== */
+  .analytics-view {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+  .analytics-view h2 { font-size: 1.3rem; font-weight: 600; color: #fff; margin-bottom: 1.5rem; }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .metric-card {
+    background: #1a1a2e;
+    border-radius: 14px;
+    padding: 1.3rem;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .metric-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 0.5rem;
+  }
+  .metric-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .metric-sub { font-size: 0.75rem; color: rgba(255,255,255,0.3); margin-top: 0.3rem; }
+
+  .analytics-section {
+    background: #1a1a2e;
+    border-radius: 14px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    margin-bottom: 1.2rem;
+  }
+  .analytics-section h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 1rem;
+  }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 0.5rem; }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .bar-label {
+    min-width: 120px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar-track {
+    flex: 1;
+    height: 22px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s ease;
+    min-width: 2px;
+  }
+  .bar-fill-orange { background: linear-gradient(90deg, #f97316, #fbbf24); }
+  .bar-fill-blue { background: linear-gradient(90deg, #6366f1, #818cf8); }
+  .bar-fill-green { background: linear-gradient(90deg, #22c55e, #4ade80); }
+  .bar-fill-red { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .bar-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    min-width: 40px;
+  }
+
+  /* A/B Results */
+  .ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .ab-card {
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 1.2rem;
+    text-align: center;
+  }
+  .ab-variant-label { font-size: 0.85rem; font-weight: 600; color: #fff; margin-bottom: 0.3rem; }
+  .ab-rate { font-size: 2rem; font-weight: 700; }
+  .ab-rate.variant-a { color: #818cf8; }
+  .ab-rate.variant-b { color: #f97316; }
+  .ab-detail { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.3rem; }
+
+  /* ========== SAVED VIEW ========== */
+  .saved-view {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+  .saved-view h2 { font-size: 1.3rem; font-weight: 600; color: #fff; margin-bottom: 1.5rem; }
+  .saved-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: rgba(255,255,255,0.3);
+  }
+  .saved-empty .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+  .btn-clear-saved {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #f87171;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+  }
+  .btn-clear-saved:hover { background: rgba(239,68,68,0.1); }
+
   /* Responsive */
   @media (max-width: 800px) {
-    .container { grid-template-columns: 1fr; }
+    .view-search.active { grid-template-columns: 1fr; }
     .form-panel { position: static; }
-    header { padding: 2rem 1.5rem 1.5rem; }
+    header { padding: 1.5rem 1.5rem 0; }
     .logo { font-size: 1.6rem; }
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .ab-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -444,11 +669,16 @@
 
 <header>
   <div class="logo">Foodie<span>AI</span></div>
-  <p>AI-powered restaurant recommendations for Bangalore</p>
+  <p class="subtitle">AI-powered restaurant recommendations for Bangalore</p>
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-view="search">Search</div>
+    <div class="nav-tab" data-view="analytics">Analytics</div>
+    <div class="nav-tab" data-view="saved">Saved</div>
+  </div>
 </header>
 
-<div class="container">
-  <!-- Form Panel -->
+<!-- ========== SEARCH VIEW ========== -->
+<div class="view view-search active" id="viewSearch">
   <div class="form-panel">
     <div class="form-title">Search Restaurants</div>
 
@@ -500,7 +730,6 @@
     <button class="btn-clear" id="clearBtn">Clear All Filters</button>
   </div>
 
-  <!-- Results Panel -->
   <div class="results-panel">
     <div class="welcome-state" id="welcome">
       <div class="welcome-icon">&#127860;</div>
@@ -526,19 +755,55 @@
       <div class="active-filters" id="activeFilters"></div>
       <div class="results-header">
         <h2>Recommendations</h2>
-        <span class="results-count" id="resultsCount"></span>
+        <div class="results-meta">
+          <span class="variant-badge" id="variantBadge" style="display:none"></span>
+          <span class="results-count" id="resultsCount"></span>
+          <button class="btn-share" id="shareBtn" title="Copy shareable link">Share</button>
+        </div>
       </div>
     </div>
     <div id="cardList"></div>
   </div>
 </div>
 
+<!-- ========== ANALYTICS VIEW ========== -->
+<div class="view analytics-view" id="viewAnalytics">
+  <h2>Analytics Dashboard</h2>
+  <div class="metric-grid" id="metricGrid"></div>
+  <div id="analyticsCharts"></div>
+</div>
+
+<!-- ========== SAVED VIEW ========== -->
+<div class="view saved-view" id="viewSaved">
+  <h2>Saved Restaurants</h2>
+  <div id="savedContent"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
 const API = '';
 let allCuisines = [];
 let selectedCuisines = new Set();
+let currentVariant = null;
+let currentSearchBody = null;
+let savedRestaurants = JSON.parse(sessionStorage.getItem('savedRestaurants') || '{}');
 
-// --- Init ---
+// === NAV TABS ===
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    const viewId = 'view' + tab.dataset.view.charAt(0).toUpperCase() + tab.dataset.view.slice(1);
+    document.getElementById(viewId).classList.add('active');
+    if (tab.dataset.view === 'analytics') loadAnalytics();
+    if (tab.dataset.view === 'saved') renderSavedView();
+  });
+});
+
+// === INIT ===
 async function loadMetadata() {
   try {
     const res = await fetch(`${API}/metadata`);
@@ -552,24 +817,82 @@ async function loadMetadata() {
     });
     allCuisines = data.cuisines;
     renderCuisineDropdown(allCuisines);
+    loadFromUrlParams();
   } catch (e) {
     console.error('Failed to load metadata:', e);
   }
 }
 
-// --- Price chips ---
+// === SHARE: URL PARAMS ===
+function loadFromUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.get('location')) return;
+  document.getElementById('location').value = params.get('location');
+  if (params.get('price_range')) {
+    params.get('price_range').split(',').forEach(p => {
+      const chip = document.querySelector(`#priceChips .chip[data-value="${p}"]`);
+      if (chip) chip.classList.add('active');
+    });
+  }
+  if (params.get('min_rating')) {
+    document.getElementById('minRating').value = params.get('min_rating');
+    document.getElementById('ratingVal').textContent = params.get('min_rating');
+  }
+  if (params.get('cuisines')) {
+    params.get('cuisines').split(',').forEach(c => selectedCuisines.add(c));
+    renderSelectedTags();
+  }
+  if (params.get('free_text')) {
+    document.getElementById('freeText').value = params.get('free_text');
+  }
+  if (params.get('limit')) {
+    document.getElementById('limit').value = params.get('limit');
+  }
+  // Auto-search with shared params
+  setTimeout(doSearch, 300);
+}
+
+function buildShareUrl() {
+  const loc = document.getElementById('location').value;
+  if (!loc) return '';
+  const params = new URLSearchParams();
+  params.set('location', loc);
+  const prices = [...document.querySelectorAll('#priceChips .chip.active')].map(c => c.dataset.value);
+  if (prices.length) params.set('price_range', prices.join(','));
+  const rating = document.getElementById('minRating').value;
+  if (parseFloat(rating) > 0) params.set('min_rating', rating);
+  if (selectedCuisines.size) params.set('cuisines', [...selectedCuisines].join(','));
+  const freeText = document.getElementById('freeText').value.trim();
+  if (freeText) params.set('free_text', freeText);
+  const limit = document.getElementById('limit').value;
+  if (limit && limit !== '10') params.set('limit', limit);
+  return `${window.location.origin}/share?${params.toString()}`;
+}
+
+document.getElementById('shareBtn').addEventListener('click', async () => {
+  const url = buildShareUrl();
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('Link copied to clipboard!');
+  } catch {
+    showToast('Could not copy link');
+  }
+});
+
+// === PRICE CHIPS ===
 document.getElementById('priceChips').addEventListener('click', e => {
   if (e.target.classList.contains('chip')) e.target.classList.toggle('active');
 });
 
-// --- Rating slider ---
+// === RATING SLIDER ===
 const ratingSlider = document.getElementById('minRating');
 const ratingVal = document.getElementById('ratingVal');
 ratingSlider.addEventListener('input', () => {
   ratingVal.textContent = ratingSlider.value == 0 ? 'Any' : ratingSlider.value;
 });
 
-// --- Cuisine multi-select ---
+// === CUISINE MULTI-SELECT ===
 const cuisineInput = document.getElementById('cuisineInput');
 const cuisineDropdown = document.getElementById('cuisineDropdown');
 
@@ -619,7 +942,7 @@ document.addEventListener('click', e => {
   }
 });
 
-// --- Clear all ---
+// === CLEAR ALL ===
 document.getElementById('clearBtn').addEventListener('click', () => {
   document.getElementById('location').value = '';
   document.querySelectorAll('#priceChips .chip').forEach(c => c.classList.remove('active'));
@@ -633,10 +956,8 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   document.getElementById('limit').value = 10;
 });
 
-// --- Search ---
+// === SEARCH ===
 document.getElementById('searchBtn').addEventListener('click', doSearch);
-
-// Allow Enter key to trigger search
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.tagName !== 'SELECT') doSearch();
 });
@@ -662,6 +983,7 @@ async function doSearch() {
     free_text_preferences: freeText,
     limit,
   };
+  currentSearchBody = body;
 
   // UI states
   document.getElementById('welcome').style.display = 'none';
@@ -679,6 +1001,7 @@ async function doSearch() {
       body: JSON.stringify(body),
     });
     const data = await res.json();
+    currentVariant = data.variant || null;
     renderActiveFilters(body);
     renderResults(data);
   } catch (e) {
@@ -724,10 +1047,20 @@ function renderResults(data) {
   document.getElementById('resultsCount').textContent =
     `${data.recommendations.length} of ${data.total_candidates}`;
 
+  // Show variant badge
+  const variantBadge = document.getElementById('variantBadge');
+  if (data.variant) {
+    variantBadge.textContent = `Variant ${data.variant}`;
+    variantBadge.style.display = 'inline-block';
+  } else {
+    variantBadge.style.display = 'none';
+  }
+
   data.recommendations.forEach((item, i) => {
     const r = item.restaurant;
     const card = document.createElement('div');
     card.className = 'card';
+    const isSaved = !!savedRestaurants[r.id];
 
     const cuisineTags = r.cuisines.map(c => `<span class="ctag">${c}</span>`).join('');
     const ratingHtml = r.avg_rating != null
@@ -751,9 +1084,249 @@ function renderResults(data) {
         <div class="score-track"><div class="score-fill" style="width:${scorePercent}%"></div></div>
         <span class="score-label">${scorePercent}%</span>
       </div>
+      <div class="card-actions">
+        <button class="fb-btn fb-up" data-id="${r.id}" title="Good recommendation">&#128077;</button>
+        <button class="fb-btn fb-down" data-id="${r.id}" title="Not helpful">&#128078;</button>
+        <button class="save-btn ${isSaved ? 'saved' : ''}" data-id="${r.id}" title="${isSaved ? 'Unsave' : 'Save'}">${isSaved ? '&#9733;' : '&#9734;'}</button>
+      </div>
     `;
+
+    // Feedback handlers
+    const upBtn = card.querySelector('.fb-up');
+    const downBtn = card.querySelector('.fb-down');
+    upBtn.addEventListener('click', () => sendFeedback(r.id, true, upBtn, downBtn));
+    downBtn.addEventListener('click', () => sendFeedback(r.id, false, upBtn, downBtn));
+
+    // Save handler
+    const saveBtn = card.querySelector('.save-btn');
+    saveBtn.addEventListener('click', () => toggleSave(r, item, saveBtn));
+
     list.appendChild(card);
   });
+}
+
+// === FEEDBACK ===
+async function sendFeedback(restaurantId, isPositive, upBtn, downBtn) {
+  const loc = document.getElementById('location').value;
+  try {
+    await fetch(`${API}/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        restaurant_id: restaurantId,
+        query_location: loc,
+        is_positive: isPositive,
+        variant: currentVariant,
+      }),
+    });
+    upBtn.disabled = true;
+    downBtn.disabled = true;
+    if (isPositive) {
+      upBtn.classList.add('selected-up');
+    } else {
+      downBtn.classList.add('selected-down');
+    }
+    showToast(isPositive ? 'Thanks! Glad you liked it' : 'Thanks for the feedback');
+  } catch (e) {
+    console.error('Feedback error:', e);
+  }
+}
+
+// === SAVE/BOOKMARK ===
+function toggleSave(restaurant, item, btn) {
+  if (savedRestaurants[restaurant.id]) {
+    delete savedRestaurants[restaurant.id];
+    btn.classList.remove('saved');
+    btn.innerHTML = '&#9734;';
+    btn.title = 'Save';
+    showToast('Removed from saved');
+  } else {
+    savedRestaurants[restaurant.id] = { restaurant, score: item.score, reason: item.reason };
+    btn.classList.add('saved');
+    btn.innerHTML = '&#9733;';
+    btn.title = 'Unsave';
+    showToast('Saved!');
+  }
+  sessionStorage.setItem('savedRestaurants', JSON.stringify(savedRestaurants));
+}
+
+// === SAVED VIEW ===
+function renderSavedView() {
+  const container = document.getElementById('savedContent');
+  const entries = Object.values(savedRestaurants);
+  if (entries.length === 0) {
+    container.innerHTML = `
+      <div class="saved-empty">
+        <div class="empty-icon">&#9734;</div>
+        <p>No saved restaurants yet. Search and bookmark your favorites!</p>
+      </div>`;
+    return;
+  }
+
+  let html = `<button class="btn-clear-saved" id="clearSavedBtn">Clear All Saved</button>`;
+  entries.forEach(entry => {
+    const r = entry.restaurant;
+    const cuisineTags = r.cuisines.map(c => `<span class="ctag">${c}</span>`).join('');
+    const ratingHtml = r.avg_rating != null
+      ? `<span class="stat stat-rating">&#9733; ${r.avg_rating.toFixed(1)}</span>` : '';
+    const reasonHtml = entry.reason
+      ? `<div class="card-reason">${entry.reason}</div>` : '';
+    html += `
+      <div class="card">
+        <div class="card-name">${r.name}</div>
+        <div class="card-stats">
+          ${ratingHtml}
+          <span class="stat stat-price">${r.price_bucket}${r.avg_cost_for_two ? ' ~ \u20B9' + r.avg_cost_for_two : ''}</span>
+          <span class="stat stat-locality">${r.locality}</span>
+        </div>
+        <div class="card-cuisines">${cuisineTags}</div>
+        <div class="card-address">${r.address}</div>
+        ${reasonHtml}
+      </div>`;
+  });
+  container.innerHTML = html;
+  document.getElementById('clearSavedBtn').addEventListener('click', () => {
+    savedRestaurants = {};
+    sessionStorage.setItem('savedRestaurants', '{}');
+    renderSavedView();
+    showToast('All saved restaurants cleared');
+  });
+}
+
+// === ANALYTICS ===
+async function loadAnalytics() {
+  try {
+    const [analyticsRes, feedbackRes, cacheRes, abRes] = await Promise.all([
+      fetch(`${API}/analytics`).then(r => r.json()),
+      fetch(`${API}/feedback/stats`).then(r => r.json()),
+      fetch(`${API}/cache/stats`).then(r => r.json()),
+      fetch(`${API}/ab-test/results`).then(r => r.json()),
+    ]);
+    renderAnalytics(analyticsRes, feedbackRes, cacheRes, abRes);
+  } catch (e) {
+    console.error('Failed to load analytics:', e);
+  }
+}
+
+function renderAnalytics(analytics, feedback, cache, abTest) {
+  // Metric cards
+  const metricGrid = document.getElementById('metricGrid');
+  metricGrid.innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">Total Searches</div>
+      <div class="metric-value">${analytics.total_searches}</div>
+      <div class="metric-sub">queries processed</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Avg Response Time</div>
+      <div class="metric-value">${analytics.avg_response_time_ms}ms</div>
+      <div class="metric-sub">end-to-end latency</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Cache Hit Rate</div>
+      <div class="metric-value">${cache.hit_rate}%</div>
+      <div class="metric-sub">${cache.hits} hits / ${cache.misses} misses</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">User Satisfaction</div>
+      <div class="metric-value">${feedback.satisfaction_rate}%</div>
+      <div class="metric-sub">${feedback.positive} positive / ${feedback.negative} negative</div>
+    </div>
+  `;
+
+  // Charts
+  const charts = document.getElementById('analyticsCharts');
+  let html = '';
+
+  // Top Locations
+  if (analytics.top_locations.length) {
+    const maxCount = Math.max(...analytics.top_locations.map(l => l.count));
+    html += `<div class="analytics-section"><h3>Top Locations</h3><div class="bar-chart">`;
+    analytics.top_locations.forEach(l => {
+      const pct = Math.round(l.count / maxCount * 100);
+      html += `<div class="bar-row">
+        <span class="bar-label">${l.name}</span>
+        <div class="bar-track"><div class="bar-fill bar-fill-orange" style="width:${pct}%"></div></div>
+        <span class="bar-value">${l.count}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Top Cuisines
+  if (analytics.top_cuisines.length) {
+    const maxCount = Math.max(...analytics.top_cuisines.map(c => c.count));
+    html += `<div class="analytics-section"><h3>Top Cuisines</h3><div class="bar-chart">`;
+    analytics.top_cuisines.forEach(c => {
+      const pct = Math.round(c.count / maxCount * 100);
+      html += `<div class="bar-row">
+        <span class="bar-label">${c.name}</span>
+        <div class="bar-track"><div class="bar-fill bar-fill-blue" style="width:${pct}%"></div></div>
+        <span class="bar-value">${c.count}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Price Range Distribution
+  const priceEntries = Object.entries(analytics.price_range_usage);
+  if (priceEntries.length) {
+    const maxP = Math.max(...priceEntries.map(e => e[1]));
+    html += `<div class="analytics-section"><h3>Price Range Distribution</h3><div class="bar-chart">`;
+    priceEntries.forEach(([k, v]) => {
+      const pct = maxP > 0 ? Math.round(v / maxP * 100) : 0;
+      html += `<div class="bar-row">
+        <span class="bar-label">${k}</span>
+        <div class="bar-track"><div class="bar-fill bar-fill-green" style="width:${pct}%"></div></div>
+        <span class="bar-value">${v}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Filter Usage
+  html += `<div class="analytics-section"><h3>Filter Usage Rates</h3><div class="bar-chart">`;
+  const filterLabels = { price_range: 'Price Range', cuisine: 'Cuisine', rating: 'Min Rating', free_text: 'Free Text' };
+  Object.entries(analytics.filter_usage).forEach(([k, v]) => {
+    html += `<div class="bar-row">
+      <span class="bar-label">${filterLabels[k] || k}</span>
+      <div class="bar-track"><div class="bar-fill bar-fill-blue" style="width:${v}%"></div></div>
+      <span class="bar-value">${v}%</span>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // A/B Test Results
+  const exp = abTest.experiment;
+  const rA = abTest.results.A;
+  const rB = abTest.results.B;
+  html += `<div class="analytics-section">
+    <h3>A/B Test: ${exp.name || 'Scoring Weights'}</h3>
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:1rem">${exp.description || ''}</p>
+    <div class="ab-grid">
+      <div class="ab-card">
+        <div class="ab-variant-label">${exp.variants ? exp.variants.A.label : 'Variant A'}</div>
+        <div class="ab-rate variant-a">${rA.satisfaction_rate}%</div>
+        <div class="ab-detail">${rA.positive} positive of ${rA.total_feedback} feedback</div>
+      </div>
+      <div class="ab-card">
+        <div class="ab-variant-label">${exp.variants ? exp.variants.B.label : 'Variant B'}</div>
+        <div class="ab-rate variant-b">${rB.satisfaction_rate}%</div>
+        <div class="ab-detail">${rB.positive} positive of ${rB.total_feedback} feedback</div>
+      </div>
+    </div>
+    <div class="ab-detail" style="text-align:center;margin-top:1rem">${abTest.total_assignments} total variant assignments</div>
+  </div>`;
+
+  charts.innerHTML = html;
+}
+
+// === TOAST ===
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
 // Boot

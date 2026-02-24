@@ -1,6 +1,6 @@
 # AI Restaurant Recommendation Service
 
-An AI-powered restaurant recommendation engine for Bangalore, built with FastAPI, Groq LLM, and sentence-transformers. Takes user preferences (location, price, rating, cuisine, free-text vibes) and returns ranked, LLM-explained restaurant recommendations from a 51,000+ restaurant dataset.
+An AI-powered restaurant recommendation engine for Bangalore, built with FastAPI, Groq LLM, and sentence-transformers. Takes user preferences (location, price, rating, cuisine, free-text vibes) and returns ranked, LLM-explained restaurant recommendations from a 51,000+ restaurant dataset. Includes an analytics dashboard, A/B testing framework, user feedback loop, and caching layer.
 
 ## How It Works
 
@@ -11,7 +11,13 @@ User Preferences
   [Hard Filters]          -- location, price bucket, min rating, cuisine match
        |
        v
-  [Heuristic Scoring]     -- 60% rating + 30% cuisine match + 10% price alignment
+  [A/B Variant Assignment] -- randomly assign scoring weights variant
+       |
+       v
+  [Cache Check]            -- return cached result if available (5min TTL)
+       |
+       v
+  [Heuristic Scoring]     -- weighted rating + cuisine match + price alignment
        |
        v
   [Semantic Search]        -- sentence-transformers embeddings for free-text "vibes"
@@ -20,16 +26,27 @@ User Preferences
   [Groq LLM Re-ranking]   -- Llama 3.3 re-ranks top candidates + generates explanations
        |
        v
-  Ranked Recommendations with Explanations
+  [Analytics Recording]    -- track search, response time, filters used
+       |
+       v
+  Ranked Recommendations with Explanations + Variant Tag
 ```
 
 ## Features
 
+### Core Recommendation Engine
 - **Smart Filtering** — Filter by 30 Bangalore areas, 4 price tiers, rating threshold, and 107 cuisine types
 - **Semantic Search** — Free-text queries like "romantic rooftop dinner" influence results via embedding similarity
 - **LLM Explanations** — Groq-powered Llama 3.3 re-ranks candidates and writes a short reason for each pick
 - **Graceful Fallback** — If LLM fails, heuristic ranking is served without explanations
-- **Web UI** — Clean, responsive single-page interface with live filters and result cards
+
+### Product & Growth Features
+- **Analytics Dashboard** — Track search volume, response times, popular locations/cuisines, filter usage rates
+- **User Feedback Loop** — Thumbs up/down on each recommendation; satisfaction rate tracked in analytics
+- **A/B Testing Framework** — Experiment with different scoring weights; measure variant performance via feedback
+- **Caching Layer** — TTL-based cache (5min) reduces repeat query latency; hit/miss rate visible in analytics
+- **Shareable Links** — Copy a URL with search parameters pre-filled; recipient sees auto-populated results
+- **Save/Bookmark** — Star favorite restaurants; persisted in session with dedicated Saved view
 
 ## Tech Stack
 
@@ -40,7 +57,7 @@ User Preferences
 | Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
 | Data | Pandas (in-memory), Hugging Face Datasets |
 | Frontend | Vanilla HTML/CSS/JS served by FastAPI |
-| Testing | pytest |
+| Testing | pytest (36 tests) |
 
 ## Project Structure
 
@@ -49,9 +66,15 @@ User Preferences
 ├── ARCHITECTURE.md                          # Detailed system design document
 ├── requirements.txt                         # Python dependencies
 ├── backend/
-│   ├── app.py                               # FastAPI app (endpoints: /, /health, /metadata, /recommendations)
+│   ├── app.py                               # FastAPI app (11 endpoints)
 │   ├── static/
-│   │   └── index.html                       # Frontend UI
+│   │   └── index.html                       # Frontend UI (Search + Analytics + Saved views)
+│   ├── analytics/
+│   │   ├── store.py                         # In-memory event store for search tracking
+│   │   ├── aggregator.py                    # Computes summary stats from events
+│   │   └── feedback.py                      # In-memory feedback store (thumbs up/down)
+│   ├── ab_testing/
+│   │   └── experiments.py                   # Experiment definitions, variant assignment, scoring weights
 │   ├── data_ingestion/
 │   │   ├── config.py                        # Ingestion config (dataset name, paths)
 │   │   └── ingest.py                        # Downloads Zomato dataset from HuggingFace, normalizes to canonical schema
@@ -65,12 +88,17 @@ User Preferences
 │   ├── recommendations/
 │   │   ├── models.py                        # Pydantic request/response schemas
 │   │   ├── data_store.py                    # Loads CSV + embeddings into memory (singleton)
-│   │   └── retrieval.py                     # Filter → score → semantic → LLM → response pipeline
+│   │   ├── retrieval.py                     # Filter → score → semantic → LLM → response pipeline
+│   │   └── cache.py                         # Dict-based TTL cache with hit/miss tracking
 │   └── tests/
-│       ├── test_ingestion.py                # Dataset ingestion tests
+│       ├── test_ingestion.py                # Dataset ingestion tests (1 test)
 │       ├── test_recommendations.py          # API endpoint tests (10 tests)
 │       ├── test_llm.py                      # Groq client tests with mocks (5 tests)
-│       └── test_embeddings.py               # Semantic search tests (4 tests)
+│       ├── test_embeddings.py               # Semantic search tests (4 tests)
+│       ├── test_analytics.py                # Analytics tracking tests (4 tests)
+│       ├── test_feedback.py                 # Feedback endpoint tests (4 tests)
+│       ├── test_cache.py                    # Cache layer tests (3 tests)
+│       └── test_ab_testing.py               # A/B testing tests (5 tests)
 └── backend/data/processed/                  # Generated data (gitignored)
     ├── restaurants.csv                      # 51,717 normalized restaurants
     └── embeddings.npy                       # Precomputed embedding vectors (76MB)
@@ -128,13 +156,7 @@ Open **http://localhost:8000** in your browser.
 Health check. Returns `{"status": "ok"}`.
 
 ### `GET /metadata`
-Returns available filter options:
-```json
-{
-  "cities": ["BTM", "Banashankari", "Koramangala 5th Block", ...],
-  "cuisines": ["Afghan", "American", "Biryani", "Cafe", "Chinese", ...]
-}
-```
+Returns available filter options (cities and cuisines).
 
 ### `POST /recommendations`
 
@@ -150,38 +172,33 @@ Returns available filter options:
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `location` | string | Yes | City area or locality (e.g., "BTM", "Indiranagar") |
-| `price_range` | string[] | No | Price buckets: `$`, `$$`, `$$$`, `$$$$` |
-| `min_rating` | float | No | Minimum rating 0-5 (default: 0) |
-| `cuisines` | string[] | No | Filter by cuisine types |
-| `free_text_preferences` | string | No | Free-text for semantic search (e.g., "cozy rooftop") |
-| `limit` | int | No | Number of results 1-50 (default: 10) |
+**Response** includes `recommendations` (with score, reason, variant) and `total_candidates`.
 
-**Response:**
+### `GET /analytics`
+Returns aggregated search analytics: total searches, avg response time, top locations, top cuisines, filter usage rates, cache stats, feedback summary.
+
+### `POST /feedback`
+Record user feedback (thumbs up/down) on a recommendation.
 ```json
 {
-  "recommendations": [
-    {
-      "restaurant": {
-        "id": "42",
-        "name": "Cafe Azzure",
-        "address": "3rd Floor, 80 Feet Road, Koramangala",
-        "city": "Koramangala 5th Block",
-        "locality": "Koramangala 5th Block",
-        "price_bucket": "$$",
-        "avg_cost_for_two": 600.0,
-        "avg_rating": 4.3,
-        "cuisines": ["Cafe", "Italian", "Continental"]
-      },
-      "score": 0.8234,
-      "reason": "A cozy Italian cafe perfect for a romantic evening with great continental options."
-    }
-  ],
-  "total_candidates": 127
+  "restaurant_id": "42",
+  "query_location": "BTM",
+  "is_positive": true,
+  "variant": "A"
 }
 ```
+
+### `GET /feedback/stats`
+Returns feedback summary: total, positive, negative, satisfaction rate.
+
+### `GET /cache/stats`
+Returns cache performance: size, hits, misses, hit rate.
+
+### `GET /ab-test/results`
+Returns A/B experiment definition and per-variant satisfaction rates.
+
+### `GET /share`
+Serves the frontend with URL query params for shareable search links.
 
 ## Running Tests
 
@@ -189,11 +206,15 @@ Returns available filter options:
 pytest backend/tests/ -v
 ```
 
-All 20 tests cover:
+All 36 tests cover:
 - Dataset ingestion pipeline
 - API endpoint validation and filtering
 - Groq LLM client (mocked — no API key needed)
 - Semantic search embedding and scoring
+- Analytics event tracking
+- User feedback recording and stats
+- Cache hit/miss behavior
+- A/B variant assignment and weight differentiation
 
 ## Dataset
 
