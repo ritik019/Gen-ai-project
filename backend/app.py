@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -34,7 +35,7 @@ from .recommendations.retrieval import get_recommendations
 app = FastAPI(title="Restaurant Recommendation API", version="2.0.0")
 app.add_middleware(
     SessionMiddleware,
-    secret_key="foodie-ai-secret-change-in-production",
+    secret_key=os.environ.get("SESSION_SECRET", "foodie-ai-secret-change-in-production"),
 )
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
