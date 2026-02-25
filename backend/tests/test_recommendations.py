@@ -5,6 +5,10 @@ from backend.app import app
 client = TestClient(app)
 
 
+def _login(c):
+    c.post("/auth/login", json={"username": "user", "password": "user123"})
+
+
 def test_health():
     resp = client.get("/health")
     assert resp.status_code == 200
@@ -12,6 +16,7 @@ def test_health():
 
 
 def test_recommendations_returns_results():
+    _login(client)
     resp = client.post("/recommendations", json={"location": "BTM"})
     assert resp.status_code == 200
     body = resp.json()
@@ -20,12 +25,14 @@ def test_recommendations_returns_results():
 
 
 def test_recommendations_respects_limit():
+    _login(client)
     resp = client.post("/recommendations", json={"location": "BTM", "limit": 3})
     body = resp.json()
     assert len(body["recommendations"]) <= 3
 
 
 def test_recommendations_filters_by_price():
+    _login(client)
     resp = client.post(
         "/recommendations",
         json={"location": "Koramangala", "price_range": ["$"]},
@@ -36,6 +43,7 @@ def test_recommendations_filters_by_price():
 
 
 def test_recommendations_filters_by_min_rating():
+    _login(client)
     resp = client.post(
         "/recommendations",
         json={"location": "Indiranagar", "min_rating": 4.5},
@@ -46,6 +54,7 @@ def test_recommendations_filters_by_min_rating():
 
 
 def test_recommendations_filters_by_cuisine():
+    _login(client)
     resp = client.post(
         "/recommendations",
         json={"location": "BTM", "cuisines": ["Chinese"]},
@@ -57,6 +66,7 @@ def test_recommendations_filters_by_cuisine():
 
 
 def test_recommendations_empty_for_unknown_location():
+    _login(client)
     resp = client.post("/recommendations", json={"location": "Nonexistent12345"})
     assert resp.status_code == 200
     body = resp.json()
@@ -65,6 +75,7 @@ def test_recommendations_empty_for_unknown_location():
 
 
 def test_recommendations_validation_rejects_bad_rating():
+    _login(client)
     resp = client.post(
         "/recommendations",
         json={"location": "BTM", "min_rating": 6.0},
@@ -73,6 +84,7 @@ def test_recommendations_validation_rejects_bad_rating():
 
 
 def test_recommendations_validation_rejects_bad_limit():
+    _login(client)
     resp = client.post(
         "/recommendations",
         json={"location": "BTM", "limit": 0},
@@ -81,6 +93,7 @@ def test_recommendations_validation_rejects_bad_limit():
 
 
 def test_recommendations_score_ordering():
+    _login(client)
     resp = client.post(
         "/recommendations",
         json={"location": "BTM", "limit": 10},

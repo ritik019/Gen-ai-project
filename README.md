@@ -1,17 +1,20 @@
 # AI Restaurant Recommendation Service
 
-An AI-powered restaurant recommendation engine for Bangalore, built with FastAPI, Groq LLM, and sentence-transformers. Takes user preferences (location, price, rating, cuisine, free-text vibes) and returns ranked, LLM-explained restaurant recommendations from a 51,000+ restaurant dataset. Includes an analytics dashboard, A/B testing framework, user feedback loop, and caching layer.
+An AI-powered restaurant recommendation engine for Bangalore, built with FastAPI, Groq LLM, and sentence-transformers. Takes user preferences (location, price, rating, cuisine, free-text vibes) and returns ranked, LLM-explained restaurant recommendations from a 51,000+ restaurant dataset. Features role-based authentication, an admin analytics dashboard with Chart.js, A/B testing with session persistence and winner detection, user feedback loop, and caching layer.
 
 ## How It Works
 
 ```
+User Login (session cookie)
+       |
+       v
 User Preferences
        |
        v
   [Hard Filters]          -- location, price bucket, min rating, cuisine match
        |
        v
-  [A/B Variant Assignment] -- randomly assign scoring weights variant
+  [A/B Variant Assignment] -- session-persistent variant (A or B)
        |
        v
   [Cache Check]            -- return cached result if available (5min TTL)
@@ -34,6 +37,13 @@ User Preferences
 
 ## Features
 
+### Authentication & Authorization
+- **Session-based Auth** — Login/logout with secure cookie sessions (FastAPI + Starlette SessionMiddleware)
+- **Role-based Access** — User role sees Search + Saved; Admin role unlocks Analytics dashboard
+- **Bcrypt Password Hashing** — Passwords stored as bcrypt hashes, never plaintext
+- **Route Protection** — Middleware enforces 401 (unauthenticated) and 403 (insufficient role) on protected endpoints
+- **Demo Accounts** — Pre-seeded `user/user123` (standard) and `admin/admin123` (admin)
+
 ### Core Recommendation Engine
 - **Smart Filtering** — Filter by 30 Bangalore areas, 4 price tiers, rating threshold, and 107 cuisine types
 - **Semantic Search** — Free-text queries like "romantic rooftop dinner" influence results via embedding similarity
@@ -41,23 +51,37 @@ User Preferences
 - **Graceful Fallback** — If LLM fails, heuristic ranking is served without explanations
 
 ### Product & Growth Features
-- **Analytics Dashboard** — Track search volume, response times, popular locations/cuisines, filter usage rates
-- **User Feedback Loop** — Thumbs up/down on each recommendation; satisfaction rate tracked in analytics
-- **A/B Testing Framework** — Experiment with different scoring weights; measure variant performance via feedback
-- **Caching Layer** — TTL-based cache (5min) reduces repeat query latency; hit/miss rate visible in analytics
+- **Admin Dashboard** — Chart.js visualizations: top locations, top cuisines, price distribution, feedback breakdown
+- **A/B Testing Framework** — Session-persistent variant assignment; per-variant satisfaction tracking; automatic winner detection (>= 5% difference)
+- **User Feedback Loop** — Thumbs up/down on each recommendation; satisfaction rate tracked per variant
+- **Caching Layer** — TTL-based cache (5min) reduces repeat query latency; hit/miss rate visible in admin dashboard
 - **Shareable Links** — Copy a URL with search parameters pre-filled; recipient sees auto-populated results
-- **Save/Bookmark** — Star favorite restaurants; persisted in session with dedicated Saved view
+
+### A/B Testing Explained
+The system runs a **scoring weights experiment** with two variants:
+- **Variant A** (Rating-heavy): Rating weight = 0.6, cuisine = 0.25, price = 0.15
+- **Variant B** (Balanced): Rating weight = 0.4, cuisine = 0.35, price = 0.25
+
+Each user session is assigned one variant on their first search. The variant persists across all searches in that session. Feedback (thumbs up/down) is tracked per variant. When one variant's satisfaction rate exceeds the other by >= 5%, the admin dashboard shows a **"Winner" badge**.
+
+### Frontend
+- **Red/White SaaS Theme** — Clean, professional design with `#B71C1C` primary and white backgrounds
+- **Login Page** — Username/password form with demo credentials hint
+- **Mobile-First Responsive** — Hamburger navigation, collapsible filters, stacked cards on mobile
+- **Chart.js Admin Dashboard** — Horizontal bars, doughnut charts, pie charts for analytics
+- **Touch-Friendly** — 44px minimum tap targets throughout
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | API | FastAPI + Uvicorn |
+| Auth | bcrypt + Starlette SessionMiddleware (itsdangerous) |
 | LLM | Groq (Llama 3.3 70B) |
 | Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
 | Data | Pandas (in-memory), Hugging Face Datasets |
-| Frontend | Vanilla HTML/CSS/JS served by FastAPI |
-| Testing | pytest (36 tests) |
+| Frontend | Vanilla HTML/CSS/JS + Chart.js |
+| Testing | pytest (52 tests) |
 
 ## Project Structure
 
@@ -66,15 +90,19 @@ User Preferences
 ├── ARCHITECTURE.md                          # Detailed system design document
 ├── requirements.txt                         # Python dependencies
 ├── backend/
-│   ├── app.py                               # FastAPI app (11 endpoints)
+│   ├── app.py                               # FastAPI app (14 endpoints, SessionMiddleware)
 │   ├── static/
-│   │   └── index.html                       # Frontend UI (Search + Analytics + Saved views)
+│   │   └── index.html                       # Frontend UI (Login + Search + Saved + Analytics)
+│   ├── auth/
+│   │   ├── __init__.py                      # Package init
+│   │   ├── users.py                         # In-memory user store with bcrypt, authenticate()
+│   │   └── dependencies.py                  # require_user(), require_admin() — FastAPI Depends
 │   ├── analytics/
 │   │   ├── store.py                         # In-memory event store for search tracking
 │   │   ├── aggregator.py                    # Computes summary stats from events
 │   │   └── feedback.py                      # In-memory feedback store (thumbs up/down)
 │   ├── ab_testing/
-│   │   └── experiments.py                   # Experiment definitions, variant assignment, scoring weights
+│   │   └── experiments.py                   # Variant assignment (session-persistent), winner detection
 │   ├── data_ingestion/
 │   │   ├── config.py                        # Ingestion config (dataset name, paths)
 │   │   └── ingest.py                        # Downloads Zomato dataset from HuggingFace, normalizes to canonical schema
@@ -86,11 +114,12 @@ User Preferences
 │   │   ├── config.py                        # Groq API config (key, model, timeout, feature flag)
 │   │   └── groq_client.py                   # Builds prompt, calls Groq, parses JSON response
 │   ├── recommendations/
-│   │   ├── models.py                        # Pydantic request/response schemas
+│   │   ├── models.py                        # Pydantic request/response schemas (+ LoginRequest)
 │   │   ├── data_store.py                    # Loads CSV + embeddings into memory (singleton)
 │   │   ├── retrieval.py                     # Filter → score → semantic → LLM → response pipeline
 │   │   └── cache.py                         # Dict-based TTL cache with hit/miss tracking
 │   └── tests/
+│       ├── test_auth.py                     # Auth/login/role tests (16 tests)
 │       ├── test_ingestion.py                # Dataset ingestion tests (1 test)
 │       ├── test_recommendations.py          # API endpoint tests (10 tests)
 │       ├── test_llm.py                      # Groq client tests with mocks (5 tests)
@@ -148,15 +177,52 @@ This creates `backend/data/processed/embeddings.npy` (~76MB).
 uvicorn backend.app:app --reload
 ```
 
-Open **http://localhost:8000** in your browser.
+Open **http://localhost:8000** in your browser. Log in with `user/user123` or `admin/admin123`.
 
 ## API Reference
 
-### `GET /health`
-Health check. Returns `{"status": "ok"}`.
+### Authentication
 
-### `GET /metadata`
-Returns available filter options (cities and cuisines).
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/auth/login` | Public | Authenticate and create session |
+| POST | `/auth/logout` | Public | Clear session |
+| GET | `/auth/me` | User | Return current user info |
+
+**Login request:**
+```json
+{ "username": "user", "password": "user123" }
+```
+
+**Login response:**
+```json
+{ "status": "ok", "user": { "username": "user", "role": "user" } }
+```
+
+### Public Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| GET | `/metadata` | Available locations and cuisines |
+| GET | `/` | Serve frontend |
+| GET | `/share` | Shareable search link |
+
+### Protected Endpoints (User)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/recommendations` | Get restaurant recommendations |
+| POST | `/feedback` | Submit thumbs up/down feedback |
+
+### Admin-Only Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/analytics` | Search analytics dashboard data |
+| GET | `/feedback/stats` | Feedback summary stats |
+| GET | `/cache/stats` | Cache performance metrics |
+| GET | `/ab-test/results` | A/B experiment results + winner |
 
 ### `POST /recommendations`
 
@@ -174,11 +240,7 @@ Returns available filter options (cities and cuisines).
 
 **Response** includes `recommendations` (with score, reason, variant) and `total_candidates`.
 
-### `GET /analytics`
-Returns aggregated search analytics: total searches, avg response time, top locations, top cuisines, filter usage rates, cache stats, feedback summary.
-
 ### `POST /feedback`
-Record user feedback (thumbs up/down) on a recommendation.
 ```json
 {
   "restaurant_id": "42",
@@ -188,33 +250,22 @@ Record user feedback (thumbs up/down) on a recommendation.
 }
 ```
 
-### `GET /feedback/stats`
-Returns feedback summary: total, positive, negative, satisfaction rate.
-
-### `GET /cache/stats`
-Returns cache performance: size, hits, misses, hit rate.
-
-### `GET /ab-test/results`
-Returns A/B experiment definition and per-variant satisfaction rates.
-
-### `GET /share`
-Serves the frontend with URL query params for shareable search links.
-
 ## Running Tests
 
 ```bash
 pytest backend/tests/ -v
 ```
 
-All 36 tests cover:
-- Dataset ingestion pipeline
-- API endpoint validation and filtering
-- Groq LLM client (mocked — no API key needed)
-- Semantic search embedding and scoring
-- Analytics event tracking
-- User feedback recording and stats
-- Cache hit/miss behavior
-- A/B variant assignment and weight differentiation
+All 52 tests cover:
+- **Authentication** — login/logout, role checks, route protection (401/403)
+- **Dataset ingestion** — HuggingFace download and normalization
+- **API endpoints** — filtering, scoring, response format
+- **Groq LLM client** — prompt building, response parsing (mocked)
+- **Semantic search** — embedding similarity ranking
+- **Analytics** — event tracking and aggregation
+- **Feedback** — recording and satisfaction stats
+- **Cache** — hit/miss behavior and stats endpoint
+- **A/B testing** — variant assignment, weight differentiation, results endpoint
 
 ## Dataset
 

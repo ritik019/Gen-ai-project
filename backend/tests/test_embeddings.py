@@ -27,11 +27,11 @@ def test_no_free_text_preserves_heuristic_order():
     from backend.app import app
 
     client = TestClient(app)
+    client.post("/auth/login", json={"username": "user", "password": "user123"})
     resp = client.post("/recommendations", json={"location": "BTM", "limit": 3})
     assert resp.status_code == 200
     body = resp.json()
     assert len(body["recommendations"]) <= 3
-    # Scores should still be ordered descending
     scores = [item["score"] for item in body["recommendations"]]
     assert scores == sorted(scores, reverse=True)
 
@@ -42,6 +42,7 @@ def test_free_text_influences_results():
     from backend.app import app
 
     client = TestClient(app)
+    client.post("/auth/login", json={"username": "user", "password": "user123"})
 
     resp_without = client.post(
         "/recommendations",
@@ -55,5 +56,4 @@ def test_free_text_influences_results():
     ids_without = [r["restaurant"]["id"] for r in resp_without.json()["recommendations"]]
     ids_with = [r["restaurant"]["id"] for r in resp_with.json()["recommendations"]]
 
-    # The ordering or set of restaurants should change when semantic preferences are applied
     assert ids_without != ids_with

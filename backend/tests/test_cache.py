@@ -10,9 +10,18 @@ from backend.recommendations.cache import clear_cache, get_cache_stats
 client = TestClient(app)
 
 
+def _login_user(c):
+    c.post("/auth/login", json={"username": "user", "password": "user123"})
+
+
+def _login_admin(c):
+    c.post("/auth/login", json={"username": "admin", "password": "admin123"})
+
+
 @patch("backend.recommendations.retrieval.assign_variant", return_value="A")
 def test_cache_miss_then_hit(mock_variant):
     clear_cache()
+    _login_user(client)
     resp1 = client.post("/recommendations", json={"location": "BTM", "limit": 3})
     assert resp1.status_code == 200
     stats = get_cache_stats()
@@ -28,6 +37,7 @@ def test_cache_miss_then_hit(mock_variant):
 @patch("backend.recommendations.retrieval.assign_variant", return_value="A")
 def test_cache_different_queries_miss(mock_variant):
     clear_cache()
+    _login_user(client)
     client.post("/recommendations", json={"location": "BTM"})
     client.post("/recommendations", json={"location": "Koramangala"})
     stats = get_cache_stats()
@@ -38,8 +48,10 @@ def test_cache_different_queries_miss(mock_variant):
 @patch("backend.recommendations.retrieval.assign_variant", return_value="A")
 def test_cache_stats_endpoint(mock_variant):
     clear_cache()
+    _login_user(client)
     client.post("/recommendations", json={"location": "BTM", "limit": 3})
     client.post("/recommendations", json={"location": "BTM", "limit": 3})
+    _login_admin(client)
     resp = client.get("/cache/stats")
     assert resp.status_code == 200
     body = resp.json()

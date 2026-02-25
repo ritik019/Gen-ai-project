@@ -87,12 +87,15 @@ def get_recommendations(request: RecommendationRequest) -> RecommendationRespons
         return cached
 
     df = get_dataframe()
-    location_lower = request.location.strip().lower()
 
     # --- Hard filters ---
-    mask = df["city_lower"].str.contains(location_lower, na=False) | df[
-        "locality_lower"
-    ].str.contains(location_lower, na=False)
+    if request.location:
+        location_lower = request.location.strip().lower()
+        mask = df["city_lower"].str.contains(location_lower, na=False) | df[
+            "locality_lower"
+        ].str.contains(location_lower, na=False)
+    else:
+        mask = pd.Series(True, index=df.index)
 
     if request.price_range:
         mask = mask & df["price_bucket"].isin(request.price_range)

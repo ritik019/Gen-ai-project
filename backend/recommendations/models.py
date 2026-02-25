@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class RecommendationRequest(BaseModel):
-    location: str = Field(..., min_length=1, description="City area or locality name")
+    location: str | None = Field(default=None, description="City area or locality name")
     price_range: list[str] | None = Field(
         default=None,
         description='Price buckets to include, e.g. ["$", "$$"]',
@@ -51,3 +51,8 @@ class FeedbackRequest(BaseModel):
 class FeedbackResponse(BaseModel):
     status: str
     total_feedback: int
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)

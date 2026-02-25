@@ -5,48 +5,176 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Foodie AI - Smart Restaurant Finder</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: #0f0f1a;
-    color: #e0e0e0;
+    background: #F8F9FA;
+    color: #212121;
     min-height: 100vh;
   }
 
-  /* --- Header --- */
-  header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    padding: 2rem 2rem 0;
-    text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+  /* ── Login View ── */
+  #viewLogin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #B71C1C 0%, #E53935 50%, #EF5350 100%);
   }
-  .logo { font-size: 2rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
-  .logo span { color: #f97316; }
-  header .subtitle { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem; }
+  .login-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    width: 380px;
+    max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  .login-card .logo { font-size: 1.8rem; font-weight: 700; color: #B71C1C; margin-bottom: 0.25rem; }
+  .login-card .logo span { color: #E53935; }
+  .login-card .subtitle { font-size: 0.85rem; color: #999; margin-bottom: 1.5rem; }
+  .login-card input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .login-card input:focus { border-color: #E53935; }
+  .login-card .btn-login {
+    width: 100%;
+    padding: 0.75rem;
+    background: #B71C1C;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 0.5rem;
+  }
+  .login-card .btn-login:hover { background: #D32F2F; }
+  .login-error {
+    color: #B71C1C;
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+    display: none;
+  }
+  .login-hint {
+    margin-top: 1.25rem;
+    font-size: 0.78rem;
+    color: #aaa;
+    line-height: 1.5;
+  }
+  .login-hint code {
+    background: #f5f5f5;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+  }
+
+  /* ── Header ── */
+  header {
+    background: #fff;
+    padding: 1rem 2rem 0;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    display: none;
+    position: relative;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.25rem 0;
+  }
+  .header-brand { text-align: center; flex: 1; min-width: 0; }
+  .logo { font-size: 1.6rem; font-weight: 700; color: #B71C1C; letter-spacing: -0.5px; }
+  .logo span { color: #E53935; }
+  header .subtitle { font-size: 0.8rem; color: #999; margin-top: 0.25rem; }
+
+  .hamburger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #333;
+    padding: 0.5rem;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #666;
+    flex-shrink: 0;
+  }
+  .user-badge .role-pill {
+    background: #FFEBEE;
+    color: #B71C1C;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .btn-logout {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .btn-logout:hover { border-color: #B71C1C; color: #B71C1C; }
 
   /* Nav tabs */
   .nav-tabs {
     display: flex;
     justify-content: center;
     gap: 0;
-    margin-top: 1.5rem;
+    margin-top: 1rem;
   }
   .nav-tab {
     padding: 0.7rem 1.8rem;
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 600;
-    color: rgba(255,255,255,0.4);
+    color: #999;
     border-bottom: 2px solid transparent;
     transition: all 0.2s;
     user-select: none;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
-  .nav-tab:hover { color: rgba(255,255,255,0.7); }
-  .nav-tab.active { color: #f97316; border-bottom-color: #f97316; }
+  .nav-tab:hover { color: #555; }
+  .nav-tab.active { color: #B71C1C; border-bottom-color: #B71C1C; }
+  .nav-tab.admin-only { display: none; }
 
-  /* --- Layout --- */
+  /* ── Layout ── */
   .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -54,1283 +182,1333 @@
     display: grid;
     grid-template-columns: 360px 1fr;
     gap: 2rem;
-    align-items: start;
   }
 
-  .view { display: none; }
-  .view.active { display: block; }
-  .view-search.active { display: grid; grid-template-columns: 360px 1fr; gap: 2rem; align-items: start; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
-
-  /* --- Form Panel --- */
-  .form-panel {
-    background: #1a1a2e;
-    border-radius: 16px;
-    padding: 1.8rem;
-    border: 1px solid rgba(255,255,255,0.06);
-    position: sticky;
-    top: 1.5rem;
+  /* ── Cards ── */
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
-  .form-title {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .field { margin-bottom: 1.4rem; }
-  .field label {
-    display: block;
+  .card-title {
     font-size: 0.75rem;
     font-weight: 600;
-    color: rgba(255,255,255,0.45);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+    color: #B71C1C;
+    margin-bottom: 1rem;
   }
 
-  select, input[type="text"], input[type="number"] {
-    width: 100%;
-    padding: 0.65rem 0.85rem;
-    border: 1px solid rgba(255,255,255,0.1);
+  /* ── AI Search Hero ── */
+  .ai-search-hero {
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFEBEE 100%);
+    border: 1px solid #FFCDD2;
     border-radius: 10px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    background: rgba(255,255,255,0.04);
-    color: #e0e0e0;
-    transition: all 0.2s;
+    padding: 1rem;
+    margin-bottom: 1.25rem !important;
   }
-  select option { background: #1a1a2e; color: #e0e0e0; }
-  select:focus, input:focus {
-    outline: none;
-    border-color: #f97316;
-    box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
-  }
-
-  /* Price chips */
-  .chips { display: flex; gap: 0.5rem; }
-  .chip {
-    flex: 1;
-    padding: 0.5rem;
-    border: 1.5px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-align: center;
-    color: rgba(255,255,255,0.5);
-    transition: all 0.2s;
-    user-select: none;
-  }
-  .chip:hover { border-color: rgba(249,115,22,0.4); color: #f97316; }
-  .chip.active {
-    background: rgba(249,115,22,0.15);
-    color: #f97316;
-    border-color: #f97316;
-  }
-
-  /* Rating slider */
-  .slider-row { display: flex; align-items: center; gap: 0.8rem; }
-  .slider-row input[type="range"] {
-    flex: 1;
-    -webkit-appearance: none;
-    height: 6px;
-    border-radius: 3px;
-    background: rgba(255,255,255,0.1);
-    outline: none;
-  }
-  .slider-row input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #f97316;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(249,115,22,0.4);
-  }
-  .slider-val {
-    min-width: 2.5rem;
-    text-align: center;
-    font-weight: 700;
-    color: #f97316;
-    font-size: 1rem;
-    background: rgba(249,115,22,0.1);
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-  }
-
-  /* Cuisine multi-select */
-  .cuisine-select { position: relative; }
-  .cuisine-input {
-    width: 100%;
-    padding: 0.65rem 0.85rem;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    background: rgba(255,255,255,0.04);
-    color: #e0e0e0;
-  }
-  .cuisine-input:focus {
-    outline: none;
-    border-color: #f97316;
-    box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
-  }
-  .cuisine-dropdown {
-    display: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    background: #1e1e32;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 100;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
-  .cuisine-dropdown.open { display: block; }
-  .cuisine-dropdown::-webkit-scrollbar { width: 6px; }
-  .cuisine-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
-  .cuisine-option {
-    padding: 0.5rem 0.85rem;
-    cursor: pointer;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    color: rgba(255,255,255,0.7);
-    transition: background 0.15s;
-  }
-  .cuisine-option:hover { background: rgba(249,115,22,0.1); color: #fff; }
-  .cuisine-option input { accent-color: #f97316; }
-  .selected-cuisines { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-  .cuisine-tag {
-    background: rgba(249,115,22,0.15);
-    color: #f97316;
-    padding: 0.25rem 0.65rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
+  .ai-search-label {
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    color: #B71C1C !important;
+    margin-bottom: 0.3rem !important;
     display: flex;
     align-items: center;
     gap: 0.4rem;
   }
-  .cuisine-tag .remove {
-    cursor: pointer;
-    font-weight: 700;
+  .ai-search-label::before {
+    content: '\2728';
     font-size: 0.9rem;
-    opacity: 0.6;
-    transition: opacity 0.15s;
   }
-  .cuisine-tag .remove:hover { opacity: 1; }
+  .ai-search-hint {
+    font-size: 0.72rem;
+    color: #888;
+    line-height: 1.5;
+    margin-bottom: 0.6rem;
+  }
+  .ai-search-hint em { color: #B71C1C; font-style: normal; font-weight: 500; }
+  .ai-search-input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    background: #fff;
+    border: 1.5px solid #E53935;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #333;
+    outline: none;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    min-height: 44px;
+  }
+  .ai-search-input:focus {
+    border-color: #B71C1C;
+    box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.12);
+  }
+  .ai-search-input::placeholder { color: #ccc; }
 
-  /* Buttons */
+  /* ── Search Filters ── */
+  .filters { position: sticky; top: 1rem; }
+  .filter-group { margin-bottom: 1rem; }
+  .filter-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 0.4rem;
+  }
+  .filter-group select,
+  .filter-group input[type="number"],
+  .filter-group input[type="text"] {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: #F8F9FA;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #333;
+    outline: none;
+    transition: border-color 0.2s;
+    min-height: 44px;
+  }
+  .filter-group select:focus,
+  .filter-group input:focus {
+    border-color: #E53935;
+  }
+  .filter-group select { cursor: pointer; }
+
+  .filter-search {
+    width: 100%;
+    padding: 0.5rem 0.8rem;
+    background: #F8F9FA;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    color: #333;
+    outline: none;
+    margin-bottom: 0.5rem;
+    transition: border-color 0.2s;
+  }
+  .filter-search:focus { border-color: #E53935; }
+  .filter-search::placeholder { color: #bbb; }
+  .chip-group { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip {
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background: #F8F9FA;
+    color: #666;
+    transition: all 0.2s;
+    user-select: none;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+  }
+  .chip.selected { background: #B71C1C; color: #fff; border-color: #B71C1C; }
+  .chip:hover { border-color: #E53935; }
+  .chip.hidden { display: none !important; }
+  .btn-show-more {
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border: 1px dashed #bbb;
+    background: transparent;
+    color: #B71C1C;
+    font-weight: 600;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+  }
+  .btn-show-more:hover { border-color: #E53935; background: #FFF5F5; }
+
   .btn-search {
     width: 100%;
-    padding: 0.85rem;
-    background: linear-gradient(135deg, #f97316, #ea580c);
+    padding: 0.75rem;
+    background: #B71C1C;
     color: #fff;
     border: none;
-    border-radius: 10px;
-    font-size: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
     font-weight: 600;
-    font-family: inherit;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 15px rgba(249,115,22,0.3);
+    transition: background 0.2s;
+    margin-top: 0.5rem;
+    min-height: 44px;
   }
-  .btn-search:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(249,115,22,0.4); }
-  .btn-search:active { transform: translateY(0); }
-  .btn-search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-search:hover { background: #D32F2F; }
+  .btn-search:disabled { background: #ccc; cursor: not-allowed; }
 
-  .btn-clear {
+  /* ── Toggle Filters (mobile) ── */
+  .btn-toggle-filters {
+    display: none;
     width: 100%;
     padding: 0.6rem;
-    background: transparent;
-    color: rgba(255,255,255,0.4);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     font-size: 0.85rem;
-    font-family: inherit;
+    font-weight: 600;
+    color: #B71C1C;
     cursor: pointer;
-    margin-top: 0.6rem;
-    transition: all 0.2s;
+    margin-bottom: 1rem;
+    min-height: 44px;
   }
-  .btn-clear:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.2); }
 
-  /* --- Results Panel --- */
-  .results-panel { min-height: 300px; }
-
+  /* ── Results ── */
   .results-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  .results-header h2 { font-size: 1.15rem; font-weight: 600; color: #fff; }
-  .results-meta { display: flex; align-items: center; gap: 0.5rem; }
-  .results-count {
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.4);
-    background: rgba(255,255,255,0.05);
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-  }
+  .results-meta { font-size: 0.8rem; color: #999; }
   .variant-badge {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #818cf8;
-    background: rgba(99,102,241,0.15);
-    padding: 0.25rem 0.6rem;
-    border-radius: 20px;
-  }
-  .btn-share {
-    padding: 0.3rem 0.75rem;
-    background: transparent;
-    border: 1px solid rgba(249,115,22,0.3);
-    border-radius: 8px;
-    color: #f97316;
-    font-size: 0.78rem;
-    font-weight: 500;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-share:hover { background: rgba(249,115,22,0.1); }
-
-  /* Active filters */
-  .active-filters {
-    display: none;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 1rem;
-  }
-  .active-filters.show { display: flex; }
-  .filter-tag {
-    background: rgba(99,102,241,0.15);
-    color: #818cf8;
+    background: #FFEBEE;
+    color: #B71C1C;
     padding: 0.2rem 0.6rem;
-    border-radius: 20px;
+    border-radius: 6px;
     font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .sort-toggle {
+    font-size: 0.78rem;
+    color: #E53935;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-weight: 500;
+    min-height: 44px;
+    padding: 0 0.5rem;
+  }
+
+  .restaurant-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    transition: all 0.15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .restaurant-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+  .restaurant-card h3 { font-size: 1.05rem; font-weight: 600; color: #212121; margin-bottom: 0.3rem; }
+  .restaurant-card .meta { font-size: 0.8rem; color: #999; margin-bottom: 0.5rem; }
+  .restaurant-card .meta span { margin-right: 0.8rem; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.5rem; }
+  .tag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.55rem;
+    background: #FFF5F5;
+    color: #B71C1C;
+    border-radius: 4px;
     font-weight: 500;
   }
-
-  .spinner {
-    display: none;
-    text-align: center;
-    padding: 5rem 0;
+  .score-bar-container { margin-top: 0.5rem; }
+  .score-label { font-size: 0.75rem; color: #999; margin-bottom: 0.25rem; }
+  .score-bar {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
   }
-  .spinner.show { display: block; }
-  .spinner-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #f97316;
-    margin: 0 4px;
-    animation: bounce 1.4s ease-in-out infinite;
-  }
-  .spinner-dot:nth-child(2) { animation-delay: 0.2s; }
-  .spinner-dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce {
-    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-    40% { transform: scale(1); opacity: 1; }
-  }
-  .spinner-text { color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-top: 1rem; }
-
-  .empty-state {
-    display: none;
-    text-align: center;
-    padding: 4rem 2rem;
-    color: rgba(255,255,255,0.35);
-  }
-  .empty-state.show { display: block; }
-  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
-
-  .welcome-state {
-    text-align: center;
-    padding: 5rem 2rem;
-    color: rgba(255,255,255,0.25);
-  }
-  .welcome-state .welcome-icon { font-size: 3rem; margin-bottom: 1rem; }
-  .welcome-state h3 { color: rgba(255,255,255,0.5); font-size: 1.1rem; margin-bottom: 0.5rem; }
-  .welcome-state p { font-size: 0.85rem; }
-
-  /* --- Restaurant Card --- */
-  .card {
-    background: #1a1a2e;
-    border-radius: 14px;
-    padding: 1.4rem 1.6rem;
-    margin-bottom: 0.8rem;
-    border: 1px solid rgba(255,255,255,0.04);
-    transition: all 0.2s;
-    position: relative;
-  }
-  .card:hover {
-    border-color: rgba(249,115,22,0.2);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-  }
-
-  .card-rank {
-    position: absolute;
-    top: 1.2rem;
-    right: 1.4rem;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: rgba(255,255,255,0.15);
-  }
-
-  .card-name {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 0.6rem;
-    padding-right: 3rem;
-  }
-
-  .card-stats {
-    display: flex;
-    gap: 0.6rem;
-    margin-bottom: 0.7rem;
-    flex-wrap: wrap;
-  }
-  .stat {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.7rem;
-    border-radius: 8px;
-    font-size: 0.78rem;
-    font-weight: 600;
-  }
-  .stat-rating { background: rgba(34,197,94,0.12); color: #4ade80; }
-  .stat-price { background: rgba(249,115,22,0.12); color: #fb923c; }
-  .stat-locality { background: rgba(99,102,241,0.12); color: #a5b4fc; }
-
-  .card-cuisines {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    margin-bottom: 0.6rem;
-  }
-  .ctag {
-    background: rgba(255,255,255,0.05);
-    color: rgba(255,255,255,0.5);
-    padding: 0.2rem 0.55rem;
-    border-radius: 6px;
-    font-size: 0.72rem;
-  }
-
-  .card-address {
-    font-size: 0.78rem;
-    color: rgba(255,255,255,0.25);
-    margin-bottom: 0.5rem;
+  .score-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #E53935, #B71C1C);
+    border-radius: 3px;
+    transition: width 0.4s;
   }
 
   .card-reason {
-    color: rgba(255,255,255,0.65);
-    font-size: 0.85rem;
-    margin-top: 0.8rem;
-    padding: 0.8rem;
-    background: rgba(249,115,22,0.06);
-    border-radius: 8px;
-    border-left: 3px solid #f97316;
-    line-height: 1.5;
+    margin-top: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFEBEE 100%);
+    border-left: 4px solid #E53935;
+    border-radius: 0 10px 10px 0;
+    font-size: 0.82rem;
+    color: #444;
+    line-height: 1.6;
+    box-shadow: 0 1px 4px rgba(229,57,53,0.08);
   }
-  .card-reason::before { content: 'AI says: '; font-weight: 600; color: #f97316; }
-
-  .card-score-bar {
-    margin-top: 0.7rem;
+  .card-reason.fallback {
+    border-left-color: #FFA726;
+    background: linear-gradient(135deg, #FFF8E1 0%, #FFF3E0 100%);
+    box-shadow: 0 1px 4px rgba(255,167,38,0.08);
+  }
+  .card-reason .reason-label {
+    font-weight: 700;
+    color: #B71C1C;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.35rem;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.3rem;
   }
-  .score-track {
-    flex: 1;
-    height: 4px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .score-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: linear-gradient(90deg, #f97316, #fbbf24);
-    transition: width 0.5s ease;
-  }
-  .score-label { font-size: 0.7rem; color: rgba(255,255,255,0.3); min-width: 3rem; text-align: right; }
+  .card-reason.fallback .reason-label { color: #E65100; }
 
-  /* Card actions (feedback + save) */
-  .card-actions {
+  .feedback-row {
     display: flex;
-    align-items: center;
     gap: 0.5rem;
-    margin-top: 0.8rem;
-    padding-top: 0.7rem;
-    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top: 0.75rem;
+    align-items: center;
   }
-  .fb-btn {
-    padding: 0.35rem 0.7rem;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 8px;
-    background: transparent;
+  .btn-feedback {
+    padding: 0.35rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
     cursor: pointer;
-    font-size: 0.85rem;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #666;
     transition: all 0.2s;
-    color: rgba(255,255,255,0.4);
+    min-height: 36px;
   }
-  .fb-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
-  .fb-btn.selected-up { background: rgba(34,197,94,0.15); border-color: #4ade80; color: #4ade80; }
-  .fb-btn.selected-down { background: rgba(239,68,68,0.15); border-color: #f87171; color: #f87171; }
-  .fb-btn:disabled { opacity: 0.5; cursor: default; }
-  .save-btn {
+  .btn-feedback:hover { border-color: #B71C1C; }
+  .btn-feedback.positive.voted { background: #E8F5E9; border-color: #43A047; color: #2E7D32; }
+  .btn-feedback.negative.voted { background: #FFEBEE; border-color: #E53935; color: #B71C1C; }
+  .btn-save {
+    padding: 0.35rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #666;
+    transition: all 0.2s;
+    min-height: 36px;
     margin-left: auto;
-    padding: 0.35rem 0.7rem;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 8px;
-    background: transparent;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-    color: rgba(255,255,255,0.4);
   }
-  .save-btn:hover { border-color: rgba(255,255,255,0.2); color: #fbbf24; }
-  .save-btn.saved { color: #fbbf24; border-color: #fbbf24; background: rgba(251,191,36,0.1); }
+  .btn-save:hover { border-color: #FFA726; color: #E65100; }
+  .btn-save.saved { background: #FFF8E1; border-color: #FFA726; color: #E65100; }
 
-  /* --- Toast --- */
-  .toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    background: #1a1a2e;
-    border: 1px solid rgba(249,115,22,0.3);
-    color: #fff;
-    padding: 0.8rem 1.4rem;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 1000;
+  /* ── Loading / Empty / Error ── */
+  .loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #999;
+    font-size: 0.9rem;
   }
-  .toast.show { transform: translateY(0); opacity: 1; }
-
-  /* ========== ANALYTICS VIEW ========== */
-  .analytics-view {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+  .loading-dots { display: inline-flex; gap: 0.3rem; margin-top: 0.5rem; }
+  .loading-dots span {
+    width: 8px; height: 8px; background: #E53935; border-radius: 50%;
+    animation: dot-pulse 1.4s infinite ease-in-out both;
   }
-  .analytics-view h2 { font-size: 1.3rem; font-weight: 600; color: #fff; margin-bottom: 1.5rem; }
+  .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+  .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+  @keyframes dot-pulse {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+  }
 
-  .metric-grid {
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #999;
+  }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+  .error-state {
+    background: #FFF5F5;
+    border: 1px solid #FFCDD2;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    color: #B71C1C;
+  }
+  .error-state .icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+  /* ── Analytics View ── */
+  #viewAnalytics { display: none; }
+  .analytics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
   }
-  .metric-card {
-    background: #1a1a2e;
-    border-radius: 14px;
-    padding: 1.3rem;
-    border: 1px solid rgba(255,255,255,0.04);
+  .stat-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
-  .metric-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.4);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 0.5rem;
-  }
-  .metric-value {
-    font-size: 1.8rem;
+  .stat-card .value {
+    font-size: 2rem;
     font-weight: 700;
-    color: #fff;
+    color: #B71C1C;
   }
-  .metric-sub { font-size: 0.75rem; color: rgba(255,255,255,0.3); margin-top: 0.3rem; }
+  .stat-card .label {
+    font-size: 0.78rem;
+    color: #999;
+    margin-top: 0.25rem;
+  }
 
-  .analytics-section {
-    background: #1a1a2e;
-    border-radius: 14px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255,255,255,0.04);
-    margin-bottom: 1.2rem;
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
   }
-  .analytics-section h3 {
-    font-size: 0.95rem;
+  .chart-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .chart-card h3 {
+    font-size: 0.8rem;
     font-weight: 600;
-    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #B71C1C;
     margin-bottom: 1rem;
   }
+  .chart-container { position: relative; height: 220px; }
 
-  .bar-chart { display: flex; flex-direction: column; gap: 0.5rem; }
-  .bar-row {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
+  /* A/B Section */
+  .ab-section {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
-  .bar-label {
-    min-width: 120px;
+  .ab-section h3 {
     font-size: 0.8rem;
-    color: rgba(255,255,255,0.6);
-    text-align: right;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #B71C1C;
+    margin-bottom: 1rem;
   }
-  .bar-track {
-    flex: 1;
-    height: 22px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 6px;
-    overflow: hidden;
+  .ab-variants {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .ab-variant-card {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
     position: relative;
   }
-  .bar-fill {
-    height: 100%;
-    border-radius: 6px;
-    transition: width 0.5s ease;
-    min-width: 2px;
+  .ab-variant-card.winner {
+    border-color: #43A047;
+    background: #F1F8E9;
   }
-  .bar-fill-orange { background: linear-gradient(90deg, #f97316, #fbbf24); }
-  .bar-fill-blue { background: linear-gradient(90deg, #6366f1, #818cf8); }
-  .bar-fill-green { background: linear-gradient(90deg, #22c55e, #4ade80); }
-  .bar-fill-red { background: linear-gradient(90deg, #ef4444, #f87171); }
-  .bar-value {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.5);
-    min-width: 40px;
-  }
-
-  /* A/B Results */
-  .ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .ab-card {
-    background: rgba(255,255,255,0.03);
+  .winner-badge {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    background: #43A047;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
     border-radius: 10px;
-    padding: 1.2rem;
-    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
-  .ab-variant-label { font-size: 0.85rem; font-weight: 600; color: #fff; margin-bottom: 0.3rem; }
-  .ab-rate { font-size: 2rem; font-weight: 700; }
-  .ab-rate.variant-a { color: #818cf8; }
-  .ab-rate.variant-b { color: #f97316; }
-  .ab-detail { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.3rem; }
+  .ab-variant-card .variant-letter {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #B71C1C;
+    margin-bottom: 0.25rem;
+  }
+  .ab-variant-card .variant-desc {
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 0.75rem;
+  }
+  .ab-variant-card .variant-stat {
+    font-size: 0.82rem;
+    color: #555;
+    margin-bottom: 0.25rem;
+  }
+  .ab-variant-card .variant-stat strong { color: #212121; }
+  .ab-variant-card .satisfaction {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+  }
+  .sat-good { color: #43A047; }
+  .sat-neutral { color: #999; }
 
-  /* ========== SAVED VIEW ========== */
-  .saved-view {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+  /* Cache Stats */
+  .cache-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
   }
-  .saved-view h2 { font-size: 1.3rem; font-weight: 600; color: #fff; margin-bottom: 1.5rem; }
+
+  /* ── Saved View ── */
+  #viewSaved { display: none; }
   .saved-empty {
     text-align: center;
-    padding: 4rem 2rem;
-    color: rgba(255,255,255,0.3);
+    padding: 3rem;
+    color: #999;
   }
-  .saved-empty .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
-  .btn-clear-saved {
-    padding: 0.5rem 1rem;
-    background: transparent;
-    border: 1px solid rgba(239,68,68,0.3);
-    color: #f87171;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-family: inherit;
-    cursor: pointer;
-    margin-bottom: 1rem;
-    transition: all 0.2s;
-  }
-  .btn-clear-saved:hover { background: rgba(239,68,68,0.1); }
 
-  /* Responsive */
-  @media (max-width: 800px) {
-    .view-search.active { grid-template-columns: 1fr; }
-    .form-panel { position: static; }
-    header { padding: 1.5rem 1.5rem 0; }
-    .logo { font-size: 1.6rem; }
-    .metric-grid { grid-template-columns: 1fr 1fr; }
-    .ab-grid { grid-template-columns: 1fr; }
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #fff;
+    color: #333;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-left: 4px solid #E53935;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 1000;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── Share Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal-box h3 { font-size: 1rem; margin-bottom: 1rem; color: #212121; }
+  .modal-box input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    outline: none;
+  }
+  .modal-box input:focus { border-color: #E53935; }
+  .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; }
+  .modal-actions button {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .modal-actions .btn-cancel { background: #f5f5f5; border: 1px solid #ddd; color: #666; }
+  .modal-actions .btn-copy { background: #B71C1C; border: none; color: #fff; font-weight: 600; }
+
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .hamburger { display: flex; }
+    .user-badge .user-name { display: none; }
+    .nav-tabs {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
+    .nav-tabs.open { display: flex; }
+    .nav-tab { padding: 0.9rem 1.5rem; border-bottom: none; border-left: 3px solid transparent; }
+    .nav-tab.active { border-left-color: #B71C1C; border-bottom-color: transparent; }
+
+    .container {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+    .filters { position: static; }
+    .btn-toggle-filters { display: block; }
+    .filters-collapsible { display: none; }
+    .filters-collapsible.open { display: block; }
+
+    .charts-grid { grid-template-columns: 1fr; }
+    .ab-variants { grid-template-columns: 1fr; }
+    .analytics-grid { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">Foodie<span>AI</span></div>
-  <p class="subtitle">AI-powered restaurant recommendations for Bangalore</p>
-  <div class="nav-tabs">
-    <div class="nav-tab active" data-view="search">Search</div>
-    <div class="nav-tab" data-view="analytics">Analytics</div>
-    <div class="nav-tab" data-view="saved">Saved</div>
+<!-- ═══════════ LOGIN VIEW ═══════════ -->
+<div id="viewLogin">
+  <div class="login-card">
+    <div class="logo">Foodie<span>AI</span></div>
+    <div class="subtitle">Smart Restaurant Finder</div>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <input type="text" id="loginUser" placeholder="Username" autocomplete="username" required>
+      <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit" class="btn-login">Sign In</button>
+    </form>
+    <div class="login-error" id="loginError">Invalid username or password</div>
+    <div class="login-hint">
+      Demo accounts:<br>
+      <code>user / user123</code> &mdash; standard user<br>
+      <code>admin / admin123</code> &mdash; admin dashboard
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ APP HEADER ═══════════ -->
+<header id="appHeader">
+  <div class="header-top">
+    <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">&#9776;</button>
+    <div class="header-brand">
+      <div class="logo">Foodie<span>AI</span></div>
+      <div class="subtitle">AI-Powered Restaurant Recommendations</div>
+    </div>
+    <div class="user-badge">
+      <span class="user-name" id="userName"></span>
+      <span class="role-pill" id="userRole"></span>
+      <button class="btn-logout" onclick="handleLogout()">Logout</button>
+    </div>
+  </div>
+  <div class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" data-view="search" onclick="switchTab(this)">Search</div>
+    <div class="nav-tab" data-view="saved" onclick="switchTab(this)">Saved</div>
+    <div class="nav-tab admin-only" data-view="analytics" onclick="switchTab(this)">Analytics</div>
   </div>
 </header>
 
-<!-- ========== SEARCH VIEW ========== -->
-<div class="view view-search active" id="viewSearch">
-  <div class="form-panel">
-    <div class="form-title">Search Restaurants</div>
-
-    <div class="field">
-      <label>Location</label>
-      <select id="location">
-        <option value="">Choose an area...</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label>Price Range</label>
-      <div class="chips" id="priceChips">
-        <span class="chip" data-value="$">$</span>
-        <span class="chip" data-value="$$">$$</span>
-        <span class="chip" data-value="$$$">$$$</span>
-        <span class="chip" data-value="$$$$">$$$$</span>
+<!-- ═══════════ SEARCH VIEW ═══════════ -->
+<div class="container" id="viewSearch" style="display:none;">
+  <aside class="filters card">
+    <div class="card-title">Filters</div>
+    <button class="btn-toggle-filters" onclick="toggleFilters()">Show / Hide Filters</button>
+    <div class="filters-collapsible open" id="filtersBody">
+      <div class="filter-group ai-search-hero">
+        <label class="ai-search-label">Ask AI — Describe what you're looking for</label>
+        <div class="ai-search-hint">Our AI reads your description and re-ranks restaurants to match your vibe. Try something like <em>"quiet rooftop with a view"</em> or <em>"cheap spicy food near me"</em>.</div>
+        <input type="text" id="filterFreeText" class="ai-search-input" placeholder="">
       </div>
-    </div>
-
-    <div class="field">
-      <label>Minimum Rating</label>
-      <div class="slider-row">
-        <input type="range" id="minRating" min="0" max="5" step="0.5" value="0">
-        <span class="slider-val" id="ratingVal">Any</span>
+      <div class="filter-group">
+        <label>Locations</label>
+        <input type="text" class="filter-search" id="locationSearch" placeholder="Search locations..." oninput="filterChips('location')">
+        <div class="chip-group" id="locationChips"></div>
       </div>
-    </div>
-
-    <div class="field">
-      <label>Cuisines</label>
-      <div class="cuisine-select" id="cuisineSelect">
-        <input type="text" class="cuisine-input" id="cuisineInput" placeholder="Type to search cuisines..." autocomplete="off">
-        <div class="cuisine-dropdown" id="cuisineDropdown"></div>
+      <div class="filter-group">
+        <label>Cuisines</label>
+        <input type="text" class="filter-search" id="cuisineSearch" placeholder="Search cuisines..." oninput="filterChips('cuisine')">
+        <div class="chip-group" id="cuisineChips"></div>
       </div>
-      <div class="selected-cuisines" id="selectedCuisines"></div>
-    </div>
-
-    <div class="field">
-      <label>Describe what you want</label>
-      <input type="text" id="freeText" placeholder="e.g. cozy date night, rooftop vibes...">
-    </div>
-
-    <div class="field">
-      <label>Max Results</label>
-      <input type="number" id="limit" value="10" min="1" max="50">
-    </div>
-
-    <button class="btn-search" id="searchBtn">Find Restaurants</button>
-    <button class="btn-clear" id="clearBtn">Clear All Filters</button>
-  </div>
-
-  <div class="results-panel">
-    <div class="welcome-state" id="welcome">
-      <div class="welcome-icon">&#127860;</div>
-      <h3>Discover your next meal</h3>
-      <p>Pick a location and search to get AI-powered recommendations</p>
-    </div>
-
-    <div class="spinner" id="spinner">
-      <div>
-        <span class="spinner-dot"></span>
-        <span class="spinner-dot"></span>
-        <span class="spinner-dot"></span>
+      <div class="filter-group">
+        <label>Minimum Rating: <strong id="ratingValue">0</strong> / 5</label>
+        <input type="range" id="filterRating" min="0" max="5" step="0.5" value="0" oninput="document.getElementById('ratingValue').textContent=this.value" style="width:100%;accent-color:#B71C1C;">
       </div>
-      <div class="spinner-text">Finding the best restaurants for you...</div>
-    </div>
-
-    <div class="empty-state" id="emptyState">
-      <div class="empty-icon">&#128533;</div>
-      <p>No restaurants found. Try broadening your filters.</p>
-    </div>
-
-    <div id="resultsHeader" style="display:none">
-      <div class="active-filters" id="activeFilters"></div>
-      <div class="results-header">
-        <h2>Recommendations</h2>
-        <div class="results-meta">
-          <span class="variant-badge" id="variantBadge" style="display:none"></span>
-          <span class="results-count" id="resultsCount"></span>
-          <button class="btn-share" id="shareBtn" title="Copy shareable link">Share</button>
+      <div class="filter-group">
+        <label>Price Range</label>
+        <div class="chip-group" id="priceChips">
+          <div class="chip" onclick="toggleChip(this)" data-value="$">$ Budget</div>
+          <div class="chip" onclick="toggleChip(this)" data-value="$$">$$ Moderate</div>
+          <div class="chip" onclick="toggleChip(this)" data-value="$$$">$$$ Premium</div>
+          <div class="chip" onclick="toggleChip(this)" data-value="$$$$">$$$$ Fine Dining</div>
         </div>
       </div>
+      <div class="filter-group">
+        <label>Results</label>
+        <input type="number" id="filterLimit" min="1" max="20" value="5">
+      </div>
+      <button class="btn-search" id="btnSearch" onclick="doSearch()">Find Restaurants</button>
     </div>
-    <div id="cardList"></div>
+  </aside>
+
+  <main>
+    <div class="results-header" id="resultsHeader" style="display:none;">
+      <div>
+        <span class="results-meta" id="resultsMeta"></span>
+        <span class="variant-badge" id="variantBadge" style="display:none;"></span>
+      </div>
+      <div>
+        <button class="sort-toggle" onclick="toggleSort()">&#x21C5; Re-sort</button>
+        <button class="sort-toggle" onclick="openShareModal()">Share</button>
+      </div>
+    </div>
+    <div id="resultsArea">
+      <div class="empty-state">
+        <div class="icon">&#x1F374;</div>
+        <p>Choose your filters and hit <strong>Find Restaurants</strong></p>
+      </div>
+    </div>
+    <div id="errorArea" style="display:none;"></div>
+  </main>
+</div>
+
+<!-- ═══════════ SAVED VIEW ═══════════ -->
+<div id="viewSaved" style="display:none;">
+  <div style="max-width:900px;margin:0 auto;padding:2rem 1.5rem;">
+    <div class="card-title">Saved Recommendations</div>
+    <div id="savedList">
+      <div class="saved-empty">
+        <div class="icon" style="font-size:2rem;margin-bottom:0.5rem;">&#x1F516;</div>
+        <p>No saved recommendations yet. Share a search to save it!</p>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ========== ANALYTICS VIEW ========== -->
-<div class="view analytics-view" id="viewAnalytics">
-  <h2>Analytics Dashboard</h2>
-  <div class="metric-grid" id="metricGrid"></div>
-  <div id="analyticsCharts"></div>
+<!-- ═══════════ ANALYTICS VIEW ═══════════ -->
+<div id="viewAnalytics" style="display:none;">
+  <div style="max-width:1100px;margin:0 auto;padding:2rem 1.5rem;">
+    <div class="card-title">Admin Dashboard</div>
+
+    <div class="analytics-grid" id="statsCards"></div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Top Locations</h3>
+        <div class="chart-container"><canvas id="chartLocations"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Top Cuisines</h3>
+        <div class="chart-container"><canvas id="chartCuisines"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Price Distribution</h3>
+        <div class="chart-container"><canvas id="chartPrices"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Feedback Breakdown</h3>
+        <div class="chart-container"><canvas id="chartFeedback"></canvas></div>
+      </div>
+    </div>
+
+    <div class="ab-section" id="abSection">
+      <h3>A/B Test — Scoring Weights</h3>
+      <div class="ab-variants" id="abVariants">
+        <div class="empty-state" style="padding:1rem;grid-column:span 2;">Loading…</div>
+      </div>
+    </div>
+
+    <div class="ab-section">
+      <h3>Cache Performance</h3>
+      <div class="cache-grid" id="cacheStats"></div>
+    </div>
+  </div>
 </div>
 
-<!-- ========== SAVED VIEW ========== -->
-<div class="view saved-view" id="viewSaved">
-  <h2>Saved Restaurants</h2>
-  <div id="savedContent"></div>
+<!-- ═══════════ SHARE MODAL ═══════════ -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal-box">
+    <h3>Share Recommendations</h3>
+    <input type="text" id="shareUrl" readonly>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeShareModal()">Close</button>
+      <button class="btn-copy" onclick="copyShareUrl()">Copy Link</button>
+    </div>
+  </div>
 </div>
 
-<!-- Toast -->
+<!-- ═══════════ TOAST ═══════════ -->
 <div class="toast" id="toast"></div>
 
 <script>
-const API = '';
-let allCuisines = [];
-let selectedCuisines = new Set();
-let currentVariant = null;
-let currentSearchBody = null;
-let savedRestaurants = JSON.parse(sessionStorage.getItem('savedRestaurants') || '{}');
+/* ─── State ─── */
+let currentUser = null;
+let lastResults = null;
+let lastQuery = null;
+let sortAsc = false;
+let chartInstances = {};
 
-// === NAV TABS ===
-document.querySelectorAll('.nav-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    tab.classList.add('active');
-    const viewId = 'view' + tab.dataset.view.charAt(0).toUpperCase() + tab.dataset.view.slice(1);
-    document.getElementById(viewId).classList.add('active');
-    if (tab.dataset.view === 'analytics') loadAnalytics();
-    if (tab.dataset.view === 'saved') renderSavedView();
-  });
-});
-
-// === INIT ===
-async function loadMetadata() {
+/* ─── Auth ─── */
+async function checkAuth() {
   try {
-    const res = await fetch(`${API}/metadata`);
-    const data = await res.json();
-    const locSelect = document.getElementById('location');
-    data.cities.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c;
-      locSelect.appendChild(opt);
-    });
-    allCuisines = data.cuisines;
-    renderCuisineDropdown(allCuisines);
-    loadFromUrlParams();
-  } catch (e) {
-    console.error('Failed to load metadata:', e);
-  }
+    const r = await fetch('/auth/me', { credentials: 'same-origin' });
+    if (r.ok) {
+      currentUser = await r.json();
+      showApp();
+    }
+  } catch (_) {}
 }
 
-// === SHARE: URL PARAMS ===
-function loadFromUrlParams() {
-  const params = new URLSearchParams(window.location.search);
-  if (!params.get('location')) return;
-  document.getElementById('location').value = params.get('location');
-  if (params.get('price_range')) {
-    params.get('price_range').split(',').forEach(p => {
-      const chip = document.querySelector(`#priceChips .chip[data-value="${p}"]`);
-      if (chip) chip.classList.add('active');
-    });
-  }
-  if (params.get('min_rating')) {
-    document.getElementById('minRating').value = params.get('min_rating');
-    document.getElementById('ratingVal').textContent = params.get('min_rating');
-  }
-  if (params.get('cuisines')) {
-    params.get('cuisines').split(',').forEach(c => selectedCuisines.add(c));
-    renderSelectedTags();
-  }
-  if (params.get('free_text')) {
-    document.getElementById('freeText').value = params.get('free_text');
-  }
-  if (params.get('limit')) {
-    document.getElementById('limit').value = params.get('limit');
-  }
-  // Auto-search with shared params
-  setTimeout(doSearch, 300);
-}
-
-function buildShareUrl() {
-  const loc = document.getElementById('location').value;
-  if (!loc) return '';
-  const params = new URLSearchParams();
-  params.set('location', loc);
-  const prices = [...document.querySelectorAll('#priceChips .chip.active')].map(c => c.dataset.value);
-  if (prices.length) params.set('price_range', prices.join(','));
-  const rating = document.getElementById('minRating').value;
-  if (parseFloat(rating) > 0) params.set('min_rating', rating);
-  if (selectedCuisines.size) params.set('cuisines', [...selectedCuisines].join(','));
-  const freeText = document.getElementById('freeText').value.trim();
-  if (freeText) params.set('free_text', freeText);
-  const limit = document.getElementById('limit').value;
-  if (limit && limit !== '10') params.set('limit', limit);
-  return `${window.location.origin}/share?${params.toString()}`;
-}
-
-document.getElementById('shareBtn').addEventListener('click', async () => {
-  const url = buildShareUrl();
-  if (!url) return;
+async function handleLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
   try {
-    await navigator.clipboard.writeText(url);
-    showToast('Link copied to clipboard!');
-  } catch {
-    showToast('Could not copy link');
-  }
-});
-
-// === PRICE CHIPS ===
-document.getElementById('priceChips').addEventListener('click', e => {
-  if (e.target.classList.contains('chip')) e.target.classList.toggle('active');
-});
-
-// === RATING SLIDER ===
-const ratingSlider = document.getElementById('minRating');
-const ratingVal = document.getElementById('ratingVal');
-ratingSlider.addEventListener('input', () => {
-  ratingVal.textContent = ratingSlider.value == 0 ? 'Any' : ratingSlider.value;
-});
-
-// === CUISINE MULTI-SELECT ===
-const cuisineInput = document.getElementById('cuisineInput');
-const cuisineDropdown = document.getElementById('cuisineDropdown');
-
-function renderCuisineDropdown(list) {
-  cuisineDropdown.innerHTML = '';
-  list.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'cuisine-option';
-    div.innerHTML = `<input type="checkbox" ${selectedCuisines.has(c) ? 'checked' : ''}><span>${c}</span>`;
-    div.addEventListener('click', (e) => { e.stopPropagation(); toggleCuisine(c); });
-    cuisineDropdown.appendChild(div);
-  });
-}
-
-function toggleCuisine(c) {
-  if (selectedCuisines.has(c)) selectedCuisines.delete(c);
-  else selectedCuisines.add(c);
-  renderSelectedTags();
-  renderCuisineDropdown(filterCuisines(cuisineInput.value));
-}
-
-function renderSelectedTags() {
-  const container = document.getElementById('selectedCuisines');
-  container.innerHTML = '';
-  selectedCuisines.forEach(c => {
-    const tag = document.createElement('span');
-    tag.className = 'cuisine-tag';
-    tag.innerHTML = `${c} <span class="remove">&times;</span>`;
-    tag.querySelector('.remove').addEventListener('click', (e) => { e.stopPropagation(); toggleCuisine(c); });
-    container.appendChild(tag);
-  });
-}
-
-function filterCuisines(query) {
-  const q = query.toLowerCase();
-  return allCuisines.filter(c => c.toLowerCase().includes(q));
-}
-
-cuisineInput.addEventListener('focus', () => cuisineDropdown.classList.add('open'));
-cuisineInput.addEventListener('input', () => {
-  renderCuisineDropdown(filterCuisines(cuisineInput.value));
-  cuisineDropdown.classList.add('open');
-});
-document.addEventListener('click', e => {
-  if (!document.getElementById('cuisineSelect').contains(e.target)) {
-    cuisineDropdown.classList.remove('open');
-  }
-});
-
-// === CLEAR ALL ===
-document.getElementById('clearBtn').addEventListener('click', () => {
-  document.getElementById('location').value = '';
-  document.querySelectorAll('#priceChips .chip').forEach(c => c.classList.remove('active'));
-  ratingSlider.value = 0;
-  ratingVal.textContent = 'Any';
-  selectedCuisines.clear();
-  renderSelectedTags();
-  cuisineInput.value = '';
-  renderCuisineDropdown(allCuisines);
-  document.getElementById('freeText').value = '';
-  document.getElementById('limit').value = 10;
-});
-
-// === SEARCH ===
-document.getElementById('searchBtn').addEventListener('click', doSearch);
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.tagName !== 'SELECT') doSearch();
-});
-
-async function doSearch() {
-  const location = document.getElementById('location').value;
-  if (!location) {
-    document.getElementById('location').style.borderColor = '#ef4444';
-    setTimeout(() => document.getElementById('location').style.borderColor = '', 2000);
-    return;
-  }
-
-  const priceRange = [...document.querySelectorAll('#priceChips .chip.active')].map(c => c.dataset.value);
-  const minRating = parseFloat(document.getElementById('minRating').value);
-  const freeText = document.getElementById('freeText').value.trim() || null;
-  const limit = parseInt(document.getElementById('limit').value) || 10;
-
-  const body = {
-    location,
-    price_range: priceRange.length ? priceRange : null,
-    min_rating: minRating,
-    cuisines: [...selectedCuisines],
-    free_text_preferences: freeText,
-    limit,
-  };
-  currentSearchBody = body;
-
-  // UI states
-  document.getElementById('welcome').style.display = 'none';
-  document.getElementById('emptyState').classList.remove('show');
-  document.getElementById('resultsHeader').style.display = 'none';
-  document.getElementById('cardList').innerHTML = '';
-  document.getElementById('spinner').classList.add('show');
-  document.getElementById('searchBtn').disabled = true;
-  document.getElementById('searchBtn').textContent = 'Searching...';
-
-  try {
-    const res = await fetch(`${API}/recommendations`, {
+    const r = await fetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      credentials: 'same-origin',
+      body: JSON.stringify({ username, password }),
     });
-    const data = await res.json();
-    currentVariant = data.variant || null;
-    renderActiveFilters(body);
-    renderResults(data);
-  } catch (e) {
-    console.error(e);
-    document.getElementById('emptyState').querySelector('p').textContent = 'Something went wrong. Please try again.';
-    document.getElementById('emptyState').classList.add('show');
-  } finally {
-    document.getElementById('spinner').classList.remove('show');
-    document.getElementById('searchBtn').disabled = false;
-    document.getElementById('searchBtn').textContent = 'Find Restaurants';
+    if (r.ok) {
+      const data = await r.json();
+      currentUser = data.user;
+      showApp();
+    } else {
+      errEl.style.display = 'block';
+    }
+  } catch (_) {
+    errEl.textContent = 'Network error';
+    errEl.style.display = 'block';
   }
 }
 
-function renderActiveFilters(body) {
-  const container = document.getElementById('activeFilters');
-  container.innerHTML = '';
-  const tags = [];
-  tags.push(body.location);
-  if (body.price_range) tags.push(body.price_range.join(' '));
-  if (body.min_rating > 0) tags.push(`${body.min_rating}+ stars`);
-  if (body.cuisines.length) body.cuisines.forEach(c => tags.push(c));
-  if (body.free_text_preferences) tags.push(`"${body.free_text_preferences}"`);
+async function handleLogout() {
+  await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  currentUser = null;
+  document.getElementById('viewLogin').style.display = 'flex';
+  document.getElementById('appHeader').style.display = 'none';
+  hideAllViews();
+}
 
-  tags.forEach(t => {
-    const tag = document.createElement('span');
-    tag.className = 'filter-tag';
-    tag.textContent = t;
-    container.appendChild(tag);
+function showApp() {
+  document.getElementById('viewLogin').style.display = 'none';
+  document.getElementById('appHeader').style.display = 'block';
+  document.getElementById('viewSearch').style.display = 'grid';
+  document.getElementById('userName').textContent = currentUser.username;
+  document.getElementById('userRole').textContent = currentUser.role;
+  // show admin tab if admin
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
   });
-  container.classList.add('show');
+  loadMetadata();
+  loadShared();
+}
+
+function hideAllViews() {
+  document.getElementById('viewSearch').style.display = 'none';
+  document.getElementById('viewSaved').style.display = 'none';
+  document.getElementById('viewAnalytics').style.display = 'none';
+}
+
+/* ─── Navigation ─── */
+function switchTab(el) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  hideAllViews();
+  const view = el.dataset.view;
+  if (view === 'search') document.getElementById('viewSearch').style.display = 'grid';
+  else if (view === 'saved') { document.getElementById('viewSaved').style.display = 'block'; loadSavedView(); }
+  else if (view === 'analytics') { document.getElementById('viewAnalytics').style.display = 'block'; loadAnalytics(); }
+  // close mobile nav
+  document.getElementById('navTabs').classList.remove('open');
+}
+
+function toggleMobileNav() {
+  document.getElementById('navTabs').classList.toggle('open');
+}
+
+function toggleFilters() {
+  document.getElementById('filtersBody').classList.toggle('open');
+}
+
+/* ─── Metadata ─── */
+const VISIBLE_CHIPS = 5;
+let allLocations = [];
+let allCuisines = [];
+
+async function loadMetadata() {
+  try {
+    const r = await fetch('/metadata', { credentials: 'same-origin' });
+    const d = await r.json();
+    allLocations = d.locations || d.cities || [];
+    allCuisines = d.cuisines || [];
+    renderChipGroup('locationChips', allLocations, 'location');
+    renderChipGroup('cuisineChips', allCuisines, 'cuisine');
+  } catch (_) {}
+}
+
+function renderChipGroup(containerId, items, groupName) {
+  const el = document.getElementById(containerId);
+  const html = items.map((item, i) =>
+    `<div class="chip${i >= VISIBLE_CHIPS ? ' hidden' : ''}" onclick="toggleChip(this)" data-value="${item}" data-group="${groupName}">${item}</div>`
+  ).join('');
+  const moreCount = Math.max(0, items.length - VISIBLE_CHIPS);
+  const moreBtn = moreCount > 0
+    ? `<button class="btn-show-more" id="${groupName}MoreBtn" onclick="toggleShowMore('${groupName}')">${moreCount} more</button>`
+    : '';
+  el.innerHTML = html + moreBtn;
+}
+
+function toggleChip(chip) {
+  chip.classList.toggle('selected');
+}
+
+function toggleShowMore(groupName) {
+  const containerId = groupName === 'location' ? 'locationChips' : 'cuisineChips';
+  const el = document.getElementById(containerId);
+  const btn = document.getElementById(groupName + 'MoreBtn');
+  const expanded = btn.dataset.expanded === 'true';
+  if (!expanded) {
+    el.querySelectorAll('.chip.hidden').forEach(c => c.classList.remove('hidden'));
+    btn.textContent = 'Show less';
+    btn.dataset.expanded = 'true';
+  } else {
+    el.querySelectorAll('.chip').forEach((c, i) => {
+      if (i >= VISIBLE_CHIPS && !c.classList.contains('selected')) c.classList.add('hidden');
+    });
+    const hiddenCount = el.querySelectorAll('.chip.hidden').length;
+    btn.textContent = hiddenCount + ' more';
+    btn.dataset.expanded = 'false';
+  }
+}
+
+function filterChips(groupName) {
+  const searchId = groupName === 'location' ? 'locationSearch' : 'cuisineSearch';
+  const containerId = groupName === 'location' ? 'locationChips' : 'cuisineChips';
+  const query = document.getElementById(searchId).value.toLowerCase().trim();
+  const el = document.getElementById(containerId);
+  const btn = document.getElementById(groupName + 'MoreBtn');
+
+  if (query) {
+    el.querySelectorAll('.chip').forEach(c => {
+      const match = c.dataset.value.toLowerCase().includes(query);
+      c.classList.toggle('hidden', !match && !c.classList.contains('selected'));
+    });
+    if (btn) btn.style.display = 'none';
+  } else {
+    el.querySelectorAll('.chip').forEach((c, i) => {
+      if (i >= VISIBLE_CHIPS && !c.classList.contains('selected')) c.classList.add('hidden');
+      else c.classList.remove('hidden');
+    });
+    if (btn) {
+      const hiddenCount = el.querySelectorAll('.chip.hidden').length;
+      btn.textContent = hiddenCount + ' more';
+      btn.style.display = hiddenCount > 0 ? 'flex' : 'none';
+      btn.dataset.expanded = 'false';
+    }
+  }
+}
+
+/* ─── Search ─── */
+async function doSearch() {
+  const btn = document.getElementById('btnSearch');
+  btn.disabled = true;
+  btn.textContent = 'Searching…';
+  const area = document.getElementById('resultsArea');
+  const errArea = document.getElementById('errorArea');
+  errArea.style.display = 'none';
+  area.innerHTML = '<div class="loading">Finding the best restaurants for you<div class="loading-dots"><span></span><span></span><span></span></div></div>';
+  document.getElementById('resultsHeader').style.display = 'none';
+
+  const selectedLocations = [...document.querySelectorAll('#locationChips .chip.selected:not(.btn-show-more)')].map(c => c.dataset.value);
+  const selectedCuisines = [...document.querySelectorAll('#cuisineChips .chip.selected:not(.btn-show-more)')].map(c => c.dataset.value);
+  const selectedPrices = [...document.querySelectorAll('#priceChips .chip.selected')].map(c => c.dataset.value);
+  const body = {
+    location: selectedLocations.length ? selectedLocations.join('|') : undefined,
+    cuisines: selectedCuisines.length ? selectedCuisines : undefined,
+    price_range: selectedPrices.length ? selectedPrices : undefined,
+    min_rating: parseFloat(document.getElementById('filterRating').value) || undefined,
+    limit: parseInt(document.getElementById('filterLimit').value) || 5,
+    free_text_preferences: document.getElementById('filterFreeText').value || undefined,
+  };
+  // Remove undefined keys
+  Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
+  lastQuery = body;
+
+  try {
+    const r = await fetch('/recommendations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    lastResults = data;
+    renderResults(data);
+  } catch (e) {
+    area.innerHTML = '';
+    errArea.style.display = 'block';
+    errArea.innerHTML = `<div class="error-state"><div class="icon">&#x26A0;</div><p>Failed to load recommendations. ${e.message}</p></div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Find Restaurants';
 }
 
 function renderResults(data) {
-  const list = document.getElementById('cardList');
-  list.innerHTML = '';
+  const area = document.getElementById('resultsArea');
+  const header = document.getElementById('resultsHeader');
+  const recs = data.recommendations || [];
 
-  if (!data.recommendations || data.recommendations.length === 0) {
-    document.getElementById('emptyState').classList.add('show');
+  if (!recs.length) {
+    area.innerHTML = '<div class="empty-state"><div class="icon">&#x1F614;</div><p>No restaurants match your criteria. Try broadening your filters.</p></div>';
+    header.style.display = 'none';
     return;
   }
 
-  document.getElementById('resultsHeader').style.display = 'block';
-  document.getElementById('resultsCount').textContent =
-    `${data.recommendations.length} of ${data.total_candidates}`;
+  header.style.display = 'flex';
+  document.getElementById('resultsMeta').textContent =
+    `${recs.length} result${recs.length > 1 ? 's' : ''} · ${(data.response_time_ms / 1000).toFixed(2)}s`;
+  const badge = document.getElementById('variantBadge');
+  if (data.variant) { badge.textContent = `Variant ${data.variant}`; badge.style.display = 'inline'; }
+  else badge.style.display = 'none';
 
-  // Show variant badge
-  const variantBadge = document.getElementById('variantBadge');
-  if (data.variant) {
-    variantBadge.textContent = `Variant ${data.variant}`;
-    variantBadge.style.display = 'inline-block';
-  } else {
-    variantBadge.style.display = 'none';
-  }
-
-  data.recommendations.forEach((item, i) => {
+  area.innerHTML = recs.map((item, i) => {
     const r = item.restaurant;
-    const card = document.createElement('div');
-    card.className = 'card';
-    const isSaved = !!savedRestaurants[r.id];
-
-    const cuisineTags = r.cuisines.map(c => `<span class="ctag">${c}</span>`).join('');
-    const ratingHtml = r.avg_rating != null
-      ? `<span class="stat stat-rating">&#9733; ${r.avg_rating.toFixed(1)}</span>` : '';
-    const reasonHtml = item.reason
-      ? `<div class="card-reason">${item.reason}</div>` : '';
-    const scorePercent = Math.min(100, Math.round(item.score * 100));
-
-    card.innerHTML = `
-      <div class="card-rank">#${i + 1}</div>
-      <div class="card-name">${r.name}</div>
-      <div class="card-stats">
-        ${ratingHtml}
-        <span class="stat stat-price">${r.price_bucket}${r.avg_cost_for_two ? ' ~ \u20B9' + r.avg_cost_for_two : ''}</span>
-        <span class="stat stat-locality">${r.locality}</span>
-      </div>
-      <div class="card-cuisines">${cuisineTags}</div>
-      <div class="card-address">${r.address}</div>
-      ${reasonHtml}
-      <div class="card-score-bar">
-        <div class="score-track"><div class="score-fill" style="width:${scorePercent}%"></div></div>
-        <span class="score-label">${scorePercent}%</span>
-      </div>
-      <div class="card-actions">
-        <button class="fb-btn fb-up" data-id="${r.id}" title="Good recommendation">&#128077;</button>
-        <button class="fb-btn fb-down" data-id="${r.id}" title="Not helpful">&#128078;</button>
-        <button class="save-btn ${isSaved ? 'saved' : ''}" data-id="${r.id}" title="${isSaved ? 'Unsave' : 'Save'}">${isSaved ? '&#9733;' : '&#9734;'}</button>
-      </div>
-    `;
-
-    // Feedback handlers
-    const upBtn = card.querySelector('.fb-up');
-    const downBtn = card.querySelector('.fb-down');
-    upBtn.addEventListener('click', () => sendFeedback(r.id, true, upBtn, downBtn));
-    downBtn.addEventListener('click', () => sendFeedback(r.id, false, upBtn, downBtn));
-
-    // Save handler
-    const saveBtn = card.querySelector('.save-btn');
-    saveBtn.addEventListener('click', () => toggleSave(r, item, saveBtn));
-
-    list.appendChild(card);
-  });
+    const cuisines = (r.cuisines || []).map(c => `<span class="tag">${c}</span>`).join('');
+    const pct = Math.round(item.score * 100);
+    const isFallback = item.reason_source === 'fallback';
+    return `
+      <div class="restaurant-card">
+        <h3>${r.name}</h3>
+        <div class="meta">
+          <span>&#x2B50; ${r.avg_rating ?? 'N/A'}</span>
+          <span>&#x1F4B0; ${r.avg_cost_for_two ? '₹' + r.avg_cost_for_two + ' for two' : r.price_bucket}</span>
+          <span>&#x1F4CD; ${r.locality || r.city || 'N/A'}</span>
+        </div>
+        ${r.address ? `<div style="font-size:0.75rem;color:#888;margin-bottom:0.4rem;">&#x1F3E0; ${r.address}</div>` : ''}
+        ${r.address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ', ' + r.address)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;color:#B71C1C;text-decoration:none;margin-bottom:0.5rem;font-weight:500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">&#x1F4CD; View on Google Maps &rarr;</a>` : ''}
+        <div class="tag-row">${cuisines}</div>
+        <div class="score-bar-container">
+          <div class="score-label">Match score: ${pct}%</div>
+          <div class="score-bar"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+        ${item.reason ? `<div class="card-reason${isFallback ? ' fallback' : ''}"><div class="reason-label">${isFallback ? '&#x26A0; Basic Reasoning (LLM unavailable)' : '&#x2728; AI Insight'}</div>${item.reason}</div>` : ''}
+        <div class="feedback-row">
+          <button class="btn-feedback positive" onclick="sendFeedback('${r.id}', true, this)">&#x1F44D; Helpful</button>
+          <button class="btn-feedback negative" onclick="sendFeedback('${r.id}', false, this)">&#x1F44E; Not for me</button>
+          <button class="btn-save${savedRestaurants.some(s => s.id === r.id) ? ' saved' : ''}" data-id="${r.id}" onclick="toggleSave('${r.id}', '${r.name.replace(/'/g,"\\'")}', '${(r.locality||r.city||'').replace(/'/g,"\\'")}', '${r.avg_rating ?? ''}', '${(r.address||'').replace(/'/g,"\\'")}')">${savedRestaurants.some(s => s.id === r.id) ? '&#x2605; Saved' : '&#x2606; Save'}</button>
+        </div>
+      </div>`;
+  }).join('');
 }
 
-// === FEEDBACK ===
-async function sendFeedback(restaurantId, isPositive, upBtn, downBtn) {
-  const loc = document.getElementById('location').value;
+function toggleSort() {
+  if (!lastResults) return;
+  sortAsc = !sortAsc;
+  const sorted = [...lastResults.recommendations].sort((a, b) => sortAsc ? a.score - b.score : b.score - a.score);
+  lastResults.recommendations = sorted;
+  renderResults(lastResults);
+}
+
+/* ─── Feedback ─── */
+async function sendFeedback(restaurantId, isPositive, btn) {
+  const row = btn.parentElement;
+  row.querySelectorAll('.btn-feedback').forEach(b => b.classList.remove('voted'));
+  btn.classList.add('voted');
   try {
-    await fetch(`${API}/feedback`, {
+    const body = {
+      restaurant_id: restaurantId,
+      query_location: lastQuery?.location || '',
+      is_positive: isPositive,
+    };
+    if (lastResults?.variant) body.variant = lastResults.variant;
+    await fetch('/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        restaurant_id: restaurantId,
-        query_location: loc,
-        is_positive: isPositive,
-        variant: currentVariant,
-      }),
+      credentials: 'same-origin',
+      body: JSON.stringify(body),
     });
-    upBtn.disabled = true;
-    downBtn.disabled = true;
-    if (isPositive) {
-      upBtn.classList.add('selected-up');
-    } else {
-      downBtn.classList.add('selected-down');
+    showToast(isPositive ? 'Thanks for the feedback!' : 'Got it — we\'ll improve!');
+  } catch (_) {}
+}
+
+/* ─── Share / Save ─── */
+function openShareModal() {
+  if (!lastQuery) return;
+  const params = new URLSearchParams();
+  Object.entries(lastQuery).forEach(([k, v]) => {
+    if (Array.isArray(v)) v.forEach(x => params.append(k, x));
+    else if (v !== undefined) params.set(k, v);
+  });
+  const url = `${location.origin}/share?${params}`;
+  document.getElementById('shareUrl').value = url;
+  document.getElementById('shareModal').classList.add('open');
+}
+function closeShareModal() { document.getElementById('shareModal').classList.remove('open'); }
+function copyShareUrl() {
+  const inp = document.getElementById('shareUrl');
+  inp.select();
+  navigator.clipboard.writeText(inp.value).then(() => showToast('Link copied!'));
+  closeShareModal();
+}
+
+function loadShared() {
+  const params = new URLSearchParams(location.search);
+  if (params.has('limit')) document.getElementById('filterLimit').value = params.get('limit');
+  if (params.has('min_rating')) document.getElementById('filterRating').value = params.get('min_rating');
+  if (params.has('free_text_preferences')) document.getElementById('filterFreeText').value = params.get('free_text_preferences');
+}
+
+async function loadSaved() {
+  try {
+    const r = await fetch('/share?list=1', { credentials: 'same-origin' });
+    if (!r.ok) return;
+    const data = await r.json();
+    const el = document.getElementById('savedList');
+    if (!data.length) {
+      el.innerHTML = '<div class="saved-empty"><div class="icon" style="font-size:2rem;">&#x1F516;</div><p>No saved recommendations yet.</p></div>';
+      return;
     }
-    showToast(isPositive ? 'Thanks! Glad you liked it' : 'Thanks for the feedback');
-  } catch (e) {
-    console.error('Feedback error:', e);
+    el.innerHTML = data.map(s => `
+      <div class="restaurant-card">
+        <h3>${s.label || 'Saved Search'}</h3>
+        <div class="meta">${s.location || ''} · ${s.created || ''}</div>
+        <a href="/share?${s.params}" style="color:#B71C1C;font-size:0.85rem;">View results →</a>
+      </div>
+    `).join('');
+  } catch (_) {
+    document.getElementById('savedList').innerHTML = '<div class="saved-empty"><p>Could not load saved items.</p></div>';
   }
 }
 
-// === SAVE/BOOKMARK ===
-function toggleSave(restaurant, item, btn) {
-  if (savedRestaurants[restaurant.id]) {
-    delete savedRestaurants[restaurant.id];
-    btn.classList.remove('saved');
-    btn.innerHTML = '&#9734;';
-    btn.title = 'Save';
-    showToast('Removed from saved');
-  } else {
-    savedRestaurants[restaurant.id] = { restaurant, score: item.score, reason: item.reason };
-    btn.classList.add('saved');
-    btn.innerHTML = '&#9733;';
-    btn.title = 'Unsave';
-    showToast('Saved!');
-  }
-  sessionStorage.setItem('savedRestaurants', JSON.stringify(savedRestaurants));
-}
-
-// === SAVED VIEW ===
-function renderSavedView() {
-  const container = document.getElementById('savedContent');
-  const entries = Object.values(savedRestaurants);
-  if (entries.length === 0) {
-    container.innerHTML = `
-      <div class="saved-empty">
-        <div class="empty-icon">&#9734;</div>
-        <p>No saved restaurants yet. Search and bookmark your favorites!</p>
-      </div>`;
-    return;
-  }
-
-  let html = `<button class="btn-clear-saved" id="clearSavedBtn">Clear All Saved</button>`;
-  entries.forEach(entry => {
-    const r = entry.restaurant;
-    const cuisineTags = r.cuisines.map(c => `<span class="ctag">${c}</span>`).join('');
-    const ratingHtml = r.avg_rating != null
-      ? `<span class="stat stat-rating">&#9733; ${r.avg_rating.toFixed(1)}</span>` : '';
-    const reasonHtml = entry.reason
-      ? `<div class="card-reason">${entry.reason}</div>` : '';
-    html += `
-      <div class="card">
-        <div class="card-name">${r.name}</div>
-        <div class="card-stats">
-          ${ratingHtml}
-          <span class="stat stat-price">${r.price_bucket}${r.avg_cost_for_two ? ' ~ \u20B9' + r.avg_cost_for_two : ''}</span>
-          <span class="stat stat-locality">${r.locality}</span>
-        </div>
-        <div class="card-cuisines">${cuisineTags}</div>
-        <div class="card-address">${r.address}</div>
-        ${reasonHtml}
-      </div>`;
-  });
-  container.innerHTML = html;
-  document.getElementById('clearSavedBtn').addEventListener('click', () => {
-    savedRestaurants = {};
-    sessionStorage.setItem('savedRestaurants', '{}');
-    renderSavedView();
-    showToast('All saved restaurants cleared');
-  });
-}
-
-// === ANALYTICS ===
+/* ─── Analytics ─── */
 async function loadAnalytics() {
   try {
-    const [analyticsRes, feedbackRes, cacheRes, abRes] = await Promise.all([
-      fetch(`${API}/analytics`).then(r => r.json()),
-      fetch(`${API}/feedback/stats`).then(r => r.json()),
-      fetch(`${API}/cache/stats`).then(r => r.json()),
-      fetch(`${API}/ab-test/results`).then(r => r.json()),
+    const fetchJson = url => fetch(url, { credentials: 'same-origin' }).then(r => {
+      if (!r.ok) throw new Error(`${url} returned ${r.status}`);
+      return r.json();
+    });
+    const [analytics, feedback, abTest, cache] = await Promise.all([
+      fetchJson('/analytics'),
+      fetchJson('/feedback/stats'),
+      fetchJson('/ab-test/results'),
+      fetchJson('/cache/stats'),
     ]);
-    renderAnalytics(analyticsRes, feedbackRes, cacheRes, abRes);
+
+    renderStatCards(analytics, feedback, cache);
+    renderCharts(analytics, feedback);
+    renderABResults(abTest);
+    renderCacheStats(cache);
   } catch (e) {
-    console.error('Failed to load analytics:', e);
+    console.error('Analytics load error:', e);
+    document.getElementById('statsCards').innerHTML =
+      '<div class="error-state" style="grid-column:span 5;"><div class="icon">&#x26A0;</div><p>Failed to load analytics. ' + e.message + '</p></div>';
   }
 }
 
-function renderAnalytics(analytics, feedback, cache, abTest) {
-  // Metric cards
-  const metricGrid = document.getElementById('metricGrid');
-  metricGrid.innerHTML = `
-    <div class="metric-card">
-      <div class="metric-label">Total Searches</div>
-      <div class="metric-value">${analytics.total_searches}</div>
-      <div class="metric-sub">queries processed</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Avg Response Time</div>
-      <div class="metric-value">${analytics.avg_response_time_ms}ms</div>
-      <div class="metric-sub">end-to-end latency</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Cache Hit Rate</div>
-      <div class="metric-value">${cache.hit_rate}%</div>
-      <div class="metric-sub">${cache.hits} hits / ${cache.misses} misses</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">User Satisfaction</div>
-      <div class="metric-value">${feedback.satisfaction_rate}%</div>
-      <div class="metric-sub">${feedback.positive} positive / ${feedback.negative} negative</div>
-    </div>
+function renderStatCards(a, fb, cache) {
+  const el = document.getElementById('statsCards');
+  el.innerHTML = `
+    <div class="stat-card"><div class="value">${a.total_searches || 0}</div><div class="label">Total Searches</div></div>
+    <div class="stat-card"><div class="value">${a.avg_response_time_ms ? (a.avg_response_time_ms / 1000).toFixed(2) + 's' : '—'}</div><div class="label">Avg Response</div></div>
+    <div class="stat-card"><div class="value">${fb.total || 0}</div><div class="label">Feedback Items</div></div>
+    <div class="stat-card"><div class="value">${fb.satisfaction_rate || 0}%</div><div class="label">Satisfaction</div></div>
+    <div class="stat-card"><div class="value">${cache.hit_rate ?? '—'}${typeof cache.hit_rate === 'number' ? '%' : ''}</div><div class="label">Cache Hit Rate</div></div>
   `;
+}
 
-  // Charts
-  const charts = document.getElementById('analyticsCharts');
-  let html = '';
+function renderCharts(a, fb) {
+  // Destroy old charts
+  Object.values(chartInstances).forEach(c => c.destroy());
+  chartInstances = {};
 
-  // Top Locations
-  if (analytics.top_locations.length) {
-    const maxCount = Math.max(...analytics.top_locations.map(l => l.count));
-    html += `<div class="analytics-section"><h3>Top Locations</h3><div class="bar-chart">`;
-    analytics.top_locations.forEach(l => {
-      const pct = Math.round(l.count / maxCount * 100);
-      html += `<div class="bar-row">
-        <span class="bar-label">${l.name}</span>
-        <div class="bar-track"><div class="bar-fill bar-fill-orange" style="width:${pct}%"></div></div>
-        <span class="bar-value">${l.count}</span>
-      </div>`;
-    });
-    html += `</div></div>`;
-  }
+  const redPalette = ['#B71C1C','#C62828','#D32F2F','#E53935','#EF5350','#EF9A9A','#FFCDD2','#FFEBEE'];
+  const defaultFont = { family: "'Inter', sans-serif", size: 11 };
 
-  // Top Cuisines
-  if (analytics.top_cuisines.length) {
-    const maxCount = Math.max(...analytics.top_cuisines.map(c => c.count));
-    html += `<div class="analytics-section"><h3>Top Cuisines</h3><div class="bar-chart">`;
-    analytics.top_cuisines.forEach(c => {
-      const pct = Math.round(c.count / maxCount * 100);
-      html += `<div class="bar-row">
-        <span class="bar-label">${c.name}</span>
-        <div class="bar-track"><div class="bar-fill bar-fill-blue" style="width:${pct}%"></div></div>
-        <span class="bar-value">${c.count}</span>
-      </div>`;
-    });
-    html += `</div></div>`;
-  }
-
-  // Price Range Distribution
-  const priceEntries = Object.entries(analytics.price_range_usage);
-  if (priceEntries.length) {
-    const maxP = Math.max(...priceEntries.map(e => e[1]));
-    html += `<div class="analytics-section"><h3>Price Range Distribution</h3><div class="bar-chart">`;
-    priceEntries.forEach(([k, v]) => {
-      const pct = maxP > 0 ? Math.round(v / maxP * 100) : 0;
-      html += `<div class="bar-row">
-        <span class="bar-label">${k}</span>
-        <div class="bar-track"><div class="bar-fill bar-fill-green" style="width:${pct}%"></div></div>
-        <span class="bar-value">${v}</span>
-      </div>`;
-    });
-    html += `</div></div>`;
-  }
-
-  // Filter Usage
-  html += `<div class="analytics-section"><h3>Filter Usage Rates</h3><div class="bar-chart">`;
-  const filterLabels = { price_range: 'Price Range', cuisine: 'Cuisine', rating: 'Min Rating', free_text: 'Free Text' };
-  Object.entries(analytics.filter_usage).forEach(([k, v]) => {
-    html += `<div class="bar-row">
-      <span class="bar-label">${filterLabels[k] || k}</span>
-      <div class="bar-track"><div class="bar-fill bar-fill-blue" style="width:${v}%"></div></div>
-      <span class="bar-value">${v}%</span>
-    </div>`;
+  // Locations
+  const locs = a.top_locations || [];
+  chartInstances.locations = new Chart(document.getElementById('chartLocations'), {
+    type: 'bar',
+    data: {
+      labels: locs.map(l => l.name || l[0]),
+      datasets: [{ data: locs.map(l => l.count || l[1]), backgroundColor: '#B71C1C', borderRadius: 4 }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { font: defaultFont } }, y: { ticks: { font: defaultFont } } },
+    },
   });
-  html += `</div></div>`;
 
-  // A/B Test Results
-  const exp = abTest.experiment;
-  const rA = abTest.results.A;
-  const rB = abTest.results.B;
-  html += `<div class="analytics-section">
-    <h3>A/B Test: ${exp.name || 'Scoring Weights'}</h3>
-    <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:1rem">${exp.description || ''}</p>
-    <div class="ab-grid">
-      <div class="ab-card">
-        <div class="ab-variant-label">${exp.variants ? exp.variants.A.label : 'Variant A'}</div>
-        <div class="ab-rate variant-a">${rA.satisfaction_rate}%</div>
-        <div class="ab-detail">${rA.positive} positive of ${rA.total_feedback} feedback</div>
-      </div>
-      <div class="ab-card">
-        <div class="ab-variant-label">${exp.variants ? exp.variants.B.label : 'Variant B'}</div>
-        <div class="ab-rate variant-b">${rB.satisfaction_rate}%</div>
-        <div class="ab-detail">${rB.positive} positive of ${rB.total_feedback} feedback</div>
-      </div>
-    </div>
-    <div class="ab-detail" style="text-align:center;margin-top:1rem">${abTest.total_assignments} total variant assignments</div>
-  </div>`;
+  // Cuisines
+  const cuis = a.top_cuisines || [];
+  chartInstances.cuisines = new Chart(document.getElementById('chartCuisines'), {
+    type: 'bar',
+    data: {
+      labels: cuis.map(c => c.name || c[0]),
+      datasets: [{ data: cuis.map(c => c.count || c[1]), backgroundColor: '#C62828', borderRadius: 4 }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { font: defaultFont } }, y: { ticks: { font: defaultFont } } },
+    },
+  });
 
-  charts.innerHTML = html;
+  // Prices
+  const prices = a.price_range_usage || a.price_distribution || {};
+  chartInstances.prices = new Chart(document.getElementById('chartPrices'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(prices),
+      datasets: [{ data: Object.values(prices), backgroundColor: redPalette.slice(0, Object.keys(prices).length) }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { font: defaultFont, padding: 12 } } },
+    },
+  });
+
+  // Feedback
+  chartInstances.feedback = new Chart(document.getElementById('chartFeedback'), {
+    type: 'pie',
+    data: {
+      labels: ['Positive', 'Negative'],
+      datasets: [{ data: [fb.positive || 0, fb.negative || 0], backgroundColor: ['#43A047', '#E53935'] }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { font: defaultFont, padding: 12 } } },
+    },
+  });
 }
 
-// === TOAST ===
+function renderABResults(ab) {
+  const el = document.getElementById('abVariants');
+  const results = ab.results || {};
+  const stats = ab.variant_stats || {};
+  const winner = ab.winner || stats.winner || null;
+
+  el.innerHTML = ['A', 'B'].map(v => {
+    const r = results[v] || {};
+    const s = stats[v] || {};
+    const isWinner = winner === v;
+    const satRate = r.satisfaction_rate ?? s.satisfaction_rate;
+    const satClass = satRate >= 60 ? 'sat-good' : 'sat-neutral';
+    return `
+      <div class="ab-variant-card${isWinner ? ' winner' : ''}">
+        ${isWinner ? '<div class="winner-badge">Winner</div>' : ''}
+        <div class="variant-letter">Variant ${v}</div>
+        <div class="variant-desc">${v === 'A' ? 'Rating-heavy (0.6)' : 'Balanced (0.4 rating)'}</div>
+        <div class="variant-stat">Total Assignments: <strong>${ab.total_assignments ?? 0}</strong></div>
+        <div class="variant-stat">Searches: <strong>${s.searches ?? 0}</strong></div>
+        <div class="variant-stat">Feedback: <strong>${r.positive ?? s.feedback_positive ?? 0}</strong> &#x1F44D; / <strong>${r.total_feedback ? r.total_feedback - (r.positive || 0) : s.feedback_negative ?? 0}</strong> &#x1F44E;</div>
+        <div class="satisfaction ${satClass}">${satRate != null ? satRate + '%' : '—'}</div>
+        <div class="variant-stat" style="font-size:0.72rem;color:#aaa;">satisfaction</div>
+      </div>`;
+  }).join('');
+}
+
+function renderCacheStats(c) {
+  document.getElementById('cacheStats').innerHTML = `
+    <div class="stat-card"><div class="value">${c.hits ?? 0}</div><div class="label">Hits</div></div>
+    <div class="stat-card"><div class="value">${c.misses ?? 0}</div><div class="label">Misses</div></div>
+    <div class="stat-card"><div class="value">${c.size ?? 0}</div><div class="label">Entries</div></div>
+    <div class="stat-card"><div class="value">${c.hit_rate ?? 0}%</div><div class="label">Hit Rate</div></div>
+  `;
+}
+
+/* ─── Toast ─── */
 function showToast(msg) {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Boot
-loadMetadata();
+/* ─── Animated Placeholder ─── */
+const placeholderSuggestions = [
+  'romantic Italian dinner for two',
+  'cheap street food in Koramangala',
+  'rooftop cafe with a view',
+  'spicy North Indian thali',
+  'cozy breakfast spot with coffee',
+  'best biryani in Bangalore',
+  'family-friendly Chinese restaurant',
+  'late-night pizza place',
+];
+let phIdx = 0, phCharIdx = 0, phTyping = true, phTimer = null;
+function animatePlaceholder() {
+  const el = document.getElementById('filterFreeText');
+  if (!el || document.activeElement === el || el.value) return;
+  const text = placeholderSuggestions[phIdx];
+  if (phTyping) {
+    phCharIdx++;
+    el.placeholder = text.slice(0, phCharIdx);
+    if (phCharIdx >= text.length) {
+      phTyping = false;
+      phTimer = setTimeout(animatePlaceholder, 1800);
+      return;
+    }
+    phTimer = setTimeout(animatePlaceholder, 55);
+  } else {
+    phCharIdx--;
+    el.placeholder = text.slice(0, phCharIdx);
+    if (phCharIdx <= 0) {
+      phTyping = true;
+      phIdx = (phIdx + 1) % placeholderSuggestions.length;
+      phTimer = setTimeout(animatePlaceholder, 300);
+      return;
+    }
+    phTimer = setTimeout(animatePlaceholder, 30);
+  }
+}
+// Restart animation when user leaves the field empty
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('filterFreeText');
+  if (el) {
+    el.addEventListener('focus', () => { clearTimeout(phTimer); el.placeholder = ''; });
+    el.addEventListener('blur', () => { if (!el.value) { phCharIdx = 0; phTyping = true; animatePlaceholder(); } });
+  }
+});
+setTimeout(animatePlaceholder, 1000);
+
+/* ─── Save / Bookmark ─── */
+let savedRestaurants = JSON.parse(localStorage.getItem('savedRestaurants') || '[]');
+
+function toggleSave(id, name, locality, rating, address) {
+  const idx = savedRestaurants.findIndex(r => r.id === id);
+  if (idx >= 0) {
+    savedRestaurants.splice(idx, 1);
+    showToast('Removed from saved');
+  } else {
+    savedRestaurants.push({ id, name, locality, rating, address: address || '', savedAt: new Date().toLocaleDateString() });
+    showToast('Saved!');
+  }
+  localStorage.setItem('savedRestaurants', JSON.stringify(savedRestaurants));
+  // Update button state in DOM
+  document.querySelectorAll(`.btn-save[data-id="${id}"]`).forEach(b => {
+    b.classList.toggle('saved', savedRestaurants.some(r => r.id === id));
+    b.innerHTML = savedRestaurants.some(r => r.id === id) ? '&#x2605; Saved' : '&#x2606; Save';
+  });
+}
+
+function loadSavedView() {
+  const el = document.getElementById('savedList');
+  if (!savedRestaurants.length) {
+    el.innerHTML = '<div class="saved-empty"><div class="icon" style="font-size:2rem;">&#x1F516;</div><p>No saved restaurants yet. Hit the Save button on any result!</p></div>';
+    return;
+  }
+  el.innerHTML = savedRestaurants.map(r => `
+    <div class="restaurant-card">
+      <h3>${r.name}</h3>
+      <div class="meta">
+        <span>&#x2B50; ${r.rating ?? 'N/A'}</span>
+        <span>&#x1F4CD; ${r.locality || 'N/A'}</span>
+        <span>Saved ${r.savedAt}</span>
+      </div>
+      ${r.address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ', ' + r.address)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;color:#B71C1C;text-decoration:none;margin-bottom:0.5rem;font-weight:500;">&#x1F4CD; View on Google Maps &rarr;</a>` : ''}
+      <button class="btn-feedback negative" onclick="toggleSave('${r.id}','','','',''); loadSavedView();">Remove</button>
+    </div>
+  `).join('');
+}
+
+/* ─── Init ─── */
+checkAuth();
 </script>
 </body>
 </html>
