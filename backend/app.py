@@ -18,7 +18,7 @@ from .ab_testing.experiments import (
 )
 from .analytics.aggregator import compute_analytics
 from .analytics.feedback import get_feedback, record_feedback
-from .analytics.store import get_events
+from .analytics.store import get_events, record_event
 from .auth.dependencies import require_admin, require_user
 from .auth.users import authenticate
 from .recommendations.cache import get_cache_stats
@@ -29,6 +29,21 @@ from .recommendations.models import (
     LoginRequest,
     RecommendationRequest,
     RecommendationResponse,
+)
+from .chat.intent import (
+    CONFIDENCE_THRESHOLD,
+    MAX_CLARIFICATIONS,
+    accumulate_intent,
+    extract_intent,
+    generate_clarification,
+    map_intent_to_request,
+    update_conversation_state,
+)
+from .chat.models import (
+    ChatRequest,
+    ChatResponse,
+    ChatResponseType,
+    ConversationState,
 )
 from .recommendations.retrieval import get_recommendations
 
@@ -126,6 +141,101 @@ def feedback(
     if body.variant:
         record_variant_feedback(body.variant, body.is_positive)
     return FeedbackResponse(status="recorded", total_feedback=len(get_feedback()))
+
+
+# ── Chat endpoint ────────────────────────────────────────────────────────
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat(
+    body: ChatRequest,
+    request: Request,
+    user: dict = Depends(require_user),
+) -> ChatResponse:
+    # 1. Load conversation state from session
+    try:
+        raw_state = request.session.get("chat_state")
+        conv_state = ConversationState(**raw_state) if raw_state else ConversationState()
+    except Exception:
+        conv_state = ConversationState()
+
+    # 2. Extract intent from message
+    intent = extract_intent(body.message, conv_state)
+
+    # 3. Accumulate intent across turns
+    accumulated = accumulate_intent(dict(conv_state.accumulated_intent), intent)
+    conv_state.accumulated_intent = accumulated
+
+    # 4. Clarification path: low confidence, not total failure, under max clarifications
+    if (
+        0.0 < intent.confidence < CONFIDENCE_THRESHOLD
+        and conv_state.clarification_count < MAX_CLARIFICATIONS
+    ):
+        question = generate_clarification(intent)
+        conv_state.clarification_count += 1
+
+        # Save turns
+        conv_state = update_conversation_state(
+            conv_state, body.message, question, intent,
+        )
+        request.session["chat_state"] = conv_state.model_dump()
+
+        return ChatResponse(
+            type=ChatResponseType.clarification,
+            message=question,
+            results=None,
+            parsed_intent=accumulated,
+        )
+
+    # 5. Map intent to recommendation request
+    rec_request = map_intent_to_request(intent, body.message)
+
+    # 6. Reuse A/B variant session logic
+    session_variant = request.session.get("ab_variant")
+    set_session_variant(session_variant)
+
+    response = get_recommendations(rec_request)
+
+    if not session_variant and response.variant:
+        request.session["ab_variant"] = response.variant
+    if response.variant:
+        record_variant_search(response.variant)
+
+    # 7. Record analytics event
+    record_event("chat_search", {
+        "message": body.message,
+        "intent_confidence": intent.confidence,
+        "location": intent.location,
+        "cuisines": intent.cuisines,
+        "results_count": len(response.recommendations),
+    })
+
+    # 8. Build conversational response
+    count = len(response.recommendations)
+    if count == 0:
+        reply = "I couldn't find any restaurants matching that. Could you try a different area or cuisine?"
+    elif intent.occasion:
+        reply = f"Found {count} great spots for {intent.occasion}! Here are my top picks:"
+    elif intent.mood:
+        reply = f"Here are {count} {intent.mood} restaurants I'd recommend:"
+    elif intent.location:
+        reply = f"Found {count} restaurants in {intent.location} for you:"
+    else:
+        reply = f"Here are {count} restaurants you might enjoy:"
+
+    # 9. Save updated conversation state
+    result_ids = [r.restaurant.id for r in response.recommendations]
+    conv_state = update_conversation_state(
+        conv_state, body.message, reply, intent, result_ids,
+    )
+    request.session["chat_state"] = conv_state.model_dump()
+
+    return ChatResponse(
+        type=ChatResponseType.results,
+        message=reply,
+        results=response,
+        parsed_intent=accumulated,
+    )
 
 
 # ── Admin endpoints ──────────────────────────────────────────────────────

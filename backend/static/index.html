@@ -3,755 +3,1020 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Foodie AI - Smart Restaurant Finder</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#D4621B">
+<title>FoodieAI — Your AI Dining Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
+  /* ══════════════════════════════════════════
+     DESIGN TOKENS
+     ══════════════════════════════════════════ */
+  :root {
+    --clr-primary: #D4621B;
+    --clr-primary-light: #E8853A;
+    --clr-primary-dark: #B5510F;
+    --clr-secondary: #722F37;
+    --clr-secondary-light: #8C3A44;
+    --clr-accent: #F5A623;
+    --clr-accent-light: #FBBF4E;
+    --clr-bg-warm: #FFF8F0;
+    --clr-bg-linen: #FAF3EB;
+    --clr-bg-card: #FFFFFF;
+    --clr-text-primary: #2D1B0E;
+    --clr-text-secondary: #6B5B4E;
+    --clr-text-muted: #9B8A7D;
+    --clr-text-light: #B8A99C;
+    --clr-success: #5A7247;
+    --clr-success-light: #E8F0E2;
+    --clr-error: #C0392B;
+    --clr-error-light: #FDE8E5;
+    --clr-border: #E8DDD2;
+    --clr-border-light: #F0E8DD;
+    --clr-shadow-warm: rgba(212, 98, 27, 0.08);
+    --clr-shadow-dark: rgba(45, 27, 14, 0.06);
+    --font-heading: 'Playfair Display', Georgia, serif;
+    --font-body: 'DM Sans', 'Inter', -apple-system, sans-serif;
+    --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem;
+    --space-lg: 1.5rem; --space-xl: 2rem; --space-2xl: 3rem; --space-3xl: 4rem;
+    --radius-sm: 6px; --radius-md: 12px; --radius-lg: 16px;
+    --radius-xl: 24px; --radius-full: 9999px;
+    --transition-fast: 150ms ease; --transition-base: 250ms ease;
+    --z-dropdown: 100; --z-sticky: 200; --z-modal: 999; --z-toast: 1000;
+  }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Inter', -apple-system, sans-serif;
-    background: #F8F9FA;
-    color: #212121;
+    font-family: var(--font-body);
+    background: var(--clr-bg-warm);
+    color: var(--clr-text-primary);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* ── Login View ── */
+  h1, h2, h3 { font-family: var(--font-heading); line-height: 1.2; }
+
+  /* ══════════════════════════════════════════
+     LOGIN VIEW
+     ══════════════════════════════════════════ */
   #viewLogin {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #B71C1C 0%, #E53935 50%, #EF5350 100%);
+    background: linear-gradient(135deg, var(--clr-secondary) 0%, var(--clr-primary) 50%, var(--clr-accent) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  #viewLogin::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.4;
   }
   .login-card {
-    background: #fff;
-    border-radius: 16px;
+    background: var(--clr-bg-card);
+    border-radius: var(--radius-lg);
     padding: 2.5rem 2rem;
-    width: 380px;
-    max-width: 90vw;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    width: 400px; max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
     text-align: center;
+    position: relative; z-index: 1;
   }
-  .login-card .logo { font-size: 1.8rem; font-weight: 700; color: #B71C1C; margin-bottom: 0.25rem; }
-  .login-card .logo span { color: #E53935; }
-  .login-card .subtitle { font-size: 0.85rem; color: #999; margin-bottom: 1.5rem; }
+  .login-card .logo {
+    font-family: var(--font-heading);
+    font-size: 2rem; font-weight: 700;
+    color: var(--clr-secondary);
+    margin-bottom: 0.25rem;
+  }
+  .login-card .logo span { color: var(--clr-primary); }
+  .login-card .subtitle { font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 1.5rem; }
   .login-card input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    margin-bottom: 0.75rem;
-    outline: none;
-    transition: border-color 0.2s;
+    width: 100%; padding: 0.75rem 1rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem; font-family: var(--font-body);
+    margin-bottom: 0.75rem; outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    background: var(--clr-bg-linen); color: var(--clr-text-primary);
   }
-  .login-card input:focus { border-color: #E53935; }
+  .login-card input:focus {
+    border-color: var(--clr-primary);
+    box-shadow: 0 0 0 3px rgba(212,98,27,0.12);
+    background: var(--clr-bg-card);
+  }
   .login-card .btn-login {
-    width: 100%;
-    padding: 0.75rem;
-    background: #B71C1C;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
+    width: 100%; padding: 0.8rem;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-dark));
+    color: #fff; border: none; border-radius: var(--radius-sm);
+    font-size: 1rem; font-weight: 600; font-family: var(--font-body);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
     margin-top: 0.5rem;
   }
-  .login-card .btn-login:hover { background: #D32F2F; }
-  .login-error {
-    color: #B71C1C;
-    font-size: 0.85rem;
-    margin-top: 0.75rem;
-    display: none;
+  .login-card .btn-login:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(212,98,27,0.3);
   }
-  .login-hint {
-    margin-top: 1.25rem;
-    font-size: 0.78rem;
-    color: #aaa;
-    line-height: 1.5;
-  }
-  .login-hint code {
-    background: #f5f5f5;
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-  }
+  .login-card .btn-login:active { transform: translateY(0); }
+  .login-error { color: var(--clr-error); font-size: 0.82rem; margin-top: 0.5rem; display: none; }
+  .login-hint { font-size: 0.72rem; color: var(--clr-text-light); margin-top: 1rem; line-height: 1.6; }
 
-  /* ── Header ── */
+  /* ══════════════════════════════════════════
+     HEADER & NAVIGATION
+     ══════════════════════════════════════════ */
   header {
-    background: #fff;
-    padding: 1rem 2rem 0;
-    text-align: center;
-    border-bottom: 1px solid #eee;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    background: var(--clr-bg-card);
+    padding: 0.75rem 1.5rem 0;
+    border-bottom: 1px solid var(--clr-border-light);
+    box-shadow: 0 1px 8px var(--clr-shadow-dark);
     display: none;
-    position: relative;
+    position: sticky; top: 0;
+    z-index: var(--z-sticky);
   }
   .header-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.25rem 0;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem;
   }
-  .header-brand { text-align: center; flex: 1; min-width: 0; }
-  .logo { font-size: 1.6rem; font-weight: 700; color: #B71C1C; letter-spacing: -0.5px; }
-  .logo span { color: #E53935; }
-  header .subtitle { font-size: 0.8rem; color: #999; margin-top: 0.25rem; }
-
+  .header-brand { text-align: left; flex: 1; min-width: 0; }
+  .logo {
+    font-family: var(--font-heading);
+    font-size: 1.5rem; font-weight: 700;
+    color: var(--clr-secondary);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--clr-primary); }
+  header .subtitle { font-size: 0.7rem; color: var(--clr-text-muted); margin-top: 0.1rem; }
   .hamburger {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #333;
-    padding: 0.5rem;
-    min-width: 44px;
-    min-height: 44px;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    display: none; background: none; border: none;
+    font-size: 1.5rem; cursor: pointer;
+    color: var(--clr-text-secondary);
+    min-height: 44px; min-width: 44px;
+    align-items: center; justify-content: center;
   }
-
   .user-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    color: #666;
-    flex-shrink: 0;
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.8rem; color: var(--clr-text-secondary); flex-shrink: 0;
   }
-  .user-badge .role-pill {
-    background: #FFEBEE;
-    color: #B71C1C;
+  .role-pill {
+    background: var(--clr-bg-linen);
+    color: var(--clr-primary);
     padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem; font-weight: 600;
     text-transform: uppercase;
   }
   .btn-logout {
-    background: none;
-    border: 1px solid #ddd;
-    padding: 0.3rem 0.8rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    color: #666;
-    transition: all 0.2s;
-    min-height: 44px;
-    min-width: 44px;
-    display: flex;
-    align-items: center;
+    background: none; border: 1px solid var(--clr-border);
+    padding: 0.3rem 0.8rem; border-radius: var(--radius-sm);
+    font-size: 0.75rem; cursor: pointer;
+    color: var(--clr-text-secondary);
+    transition: all var(--transition-fast);
+    min-height: 44px; display: flex; align-items: center;
+    font-family: var(--font-body);
   }
-  .btn-logout:hover { border-color: #B71C1C; color: #B71C1C; }
-
-  /* Nav tabs */
+  .btn-logout:hover { border-color: var(--clr-primary); color: var(--clr-primary); }
   .nav-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 0;
-    margin-top: 1rem;
+    display: flex; justify-content: flex-start; gap: 0; margin-top: 0.5rem;
   }
   .nav-tab {
-    padding: 0.7rem 1.8rem;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #999;
+    padding: 0.7rem 1.5rem; cursor: pointer;
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--clr-text-muted);
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    user-select: none;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
+    transition: all var(--transition-fast);
+    user-select: none; min-height: 44px;
+    display: flex; align-items: center; font-family: var(--font-body);
   }
-  .nav-tab:hover { color: #555; }
-  .nav-tab.active { color: #B71C1C; border-bottom-color: #B71C1C; }
-  .nav-tab.admin-only { display: none; }
+  .nav-tab:hover { color: var(--clr-text-secondary); }
+  .nav-tab.active { color: var(--clr-primary); border-bottom-color: var(--clr-primary); }
 
-  /* ── Layout ── */
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
-    display: grid;
-    grid-template-columns: 360px 1fr;
-    gap: 2rem;
+  /* ══════════════════════════════════════════
+     HERO SEARCH SECTION
+     ══════════════════════════════════════════ */
+  .hero-search {
+    background: linear-gradient(135deg, var(--clr-bg-linen) 0%, var(--clr-bg-warm) 40%, rgba(245,166,35,0.08) 100%);
+    padding: var(--space-3xl) var(--space-lg) var(--space-xl);
+    text-align: center;
+    border-bottom: 1px solid var(--clr-border-light);
+    position: relative; overflow: hidden;
   }
-
-  /* ── Cards ── */
-  .card {
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid #eee;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  .hero-search::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80') center/cover no-repeat;
+    opacity: 0.05; pointer-events: none;
   }
-  .card-title {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #B71C1C;
-    margin-bottom: 1rem;
+  .hero-search-inner {
+    position: relative; z-index: 1;
+    max-width: 720px; margin: 0 auto;
   }
-
-  /* ── AI Search Hero ── */
-  .ai-search-hero {
-    background: linear-gradient(135deg, #FFF5F5 0%, #FFEBEE 100%);
-    border: 1px solid #FFCDD2;
-    border-radius: 10px;
-    padding: 1rem;
-    margin-bottom: 1.25rem !important;
+  .hero-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700; color: var(--clr-text-primary);
+    margin-bottom: var(--space-sm);
   }
-  .ai-search-label {
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    color: #B71C1C !important;
-    margin-bottom: 0.3rem !important;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
+  .hero-subtitle {
+    font-size: 1rem; color: var(--clr-text-secondary);
+    margin-bottom: var(--space-lg);
   }
-  .ai-search-label::before {
-    content: '\2728';
-    font-size: 0.9rem;
+  .search-bar-wrapper {
+    position: relative;
+    max-width: 640px; margin: 0 auto var(--space-lg);
   }
-  .ai-search-hint {
-    font-size: 0.72rem;
-    color: #888;
-    line-height: 1.5;
-    margin-bottom: 0.6rem;
-  }
-  .ai-search-hint em { color: #B71C1C; font-style: normal; font-weight: 500; }
-  .ai-search-input {
+  .search-bar {
     width: 100%;
-    padding: 0.7rem 0.9rem;
-    background: #fff;
-    border: 1.5px solid #E53935;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    color: #333;
-    outline: none;
-    transition: box-shadow 0.2s, border-color 0.2s;
-    min-height: 44px;
+    padding: 1rem 3.5rem 1rem 1.25rem;
+    background: var(--clr-bg-card);
+    border: 2px solid var(--clr-border);
+    border-radius: var(--radius-xl);
+    font-size: 1.05rem; font-family: var(--font-body);
+    color: var(--clr-text-primary); outline: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    box-shadow: 0 4px 20px var(--clr-shadow-dark);
+    min-height: 56px;
   }
-  .ai-search-input:focus {
-    border-color: #B71C1C;
-    box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.12);
+  .search-bar:focus {
+    border-color: var(--clr-primary);
+    box-shadow: 0 4px 20px var(--clr-shadow-dark), 0 0 0 4px rgba(212,98,27,0.1);
   }
-  .ai-search-input::placeholder { color: #ccc; }
+  .search-bar::placeholder { color: var(--clr-text-light); }
+  .search-bar-icon {
+    position: absolute; right: 0.5rem; top: 50%;
+    transform: translateY(-50%);
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent));
+    border: none; color: #fff;
+    font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  .search-bar-icon:hover {
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: 0 4px 12px rgba(212,98,27,0.3);
+  }
+  .search-bar-icon.searching {
+    animation: pulse-search 1.2s infinite ease-in-out;
+    transform: translateY(-50%);
+  }
 
-  /* ── Search Filters ── */
-  .filters { position: sticky; top: 1rem; }
-  .filter-group { margin-bottom: 1rem; }
-  .filter-group label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #666;
-    margin-bottom: 0.4rem;
+  /* Occasion Quick Buttons */
+  .occasion-pills {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 0.5rem; max-width: 640px; margin: 0 auto;
   }
-  .filter-group select,
-  .filter-group input[type="number"],
-  .filter-group input[type="text"] {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    background: #F8F9FA;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    color: #333;
-    outline: none;
-    transition: border-color 0.2s;
-    min-height: 44px;
+  .occasion-pill {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-bg-card);
+    color: var(--clr-text-secondary);
+    font-size: 0.85rem; font-weight: 500;
+    font-family: var(--font-body); cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex; align-items: center; gap: 0.35rem;
+    min-height: 40px; white-space: nowrap; user-select: none;
   }
-  .filter-group select:focus,
-  .filter-group input:focus {
-    border-color: #E53935;
+  .occasion-pill:hover {
+    border-color: var(--clr-primary); color: var(--clr-primary);
+    background: rgba(212,98,27,0.05);
   }
-  .filter-group select { cursor: pointer; }
+  .occasion-pill:active { transform: scale(0.96); }
+  .occasion-pill.active {
+    background: var(--clr-primary); color: #fff; border-color: var(--clr-primary);
+  }
+  .pill-emoji { font-size: 1rem; }
 
-  .filter-search {
-    width: 100%;
-    padding: 0.5rem 0.8rem;
-    background: #F8F9FA;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.82rem;
-    color: #333;
-    outline: none;
-    margin-bottom: 0.5rem;
-    transition: border-color 0.2s;
+  /* ══════════════════════════════════════════
+     INLINE FILTERS (replaces sidebar)
+     ══════════════════════════════════════════ */
+  .filters-bar {
+    max-width: 1200px; margin: 0 auto;
+    padding: var(--space-md) var(--space-lg);
   }
-  .filter-search:focus { border-color: #E53935; }
-  .filter-search::placeholder { color: #bbb; }
-  .chip-group { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .chip {
-    padding: 0.35rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.78rem;
-    cursor: pointer;
-    border: 1px solid #ddd;
-    background: #F8F9FA;
-    color: #666;
-    transition: all 0.2s;
-    user-select: none;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
+  .filters-summary {
+    display: flex; align-items: center;
+    gap: var(--space-sm); flex-wrap: wrap;
   }
-  .chip.selected { background: #B71C1C; color: #fff; border-color: #B71C1C; }
-  .chip:hover { border-color: #E53935; }
-  .chip.hidden { display: none !important; }
-  .btn-show-more {
+  .active-filter-tag {
+    display: inline-flex; align-items: center; gap: 0.25rem;
     padding: 0.3rem 0.7rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    border: 1px dashed #bbb;
-    background: transparent;
-    color: #B71C1C;
-    font-weight: 600;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem; font-weight: 500;
+    background: rgba(212,98,27,0.1); color: var(--clr-primary);
+    border: 1px solid rgba(212,98,27,0.2);
   }
-  .btn-show-more:hover { border-color: #E53935; background: #FFF5F5; }
-
-  .btn-search {
-    width: 100%;
-    padding: 0.75rem;
-    background: #B71C1C;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    margin-top: 0.5rem;
-    min-height: 44px;
+  .active-filter-tag .remove-tag {
+    cursor: pointer; font-weight: 700; margin-left: 0.15rem;
+    opacity: 0.6; transition: opacity var(--transition-fast);
   }
-  .btn-search:hover { background: #D32F2F; }
-  .btn-search:disabled { background: #ccc; cursor: not-allowed; }
-
-  /* ── Toggle Filters (mobile) ── */
-  .btn-toggle-filters {
+  .active-filter-tag .remove-tag:hover { opacity: 1; }
+  .more-filters-toggle {
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    border: 1.5px dashed var(--clr-border);
+    background: transparent; color: var(--clr-primary);
+    transition: all var(--transition-fast);
+    display: flex; align-items: center; gap: 0.3rem;
+    min-height: 36px; font-family: var(--font-body);
+  }
+  .more-filters-toggle:hover { border-color: var(--clr-primary); background: rgba(212,98,27,0.04); }
+  .more-filters-toggle.has-filters {
+    border-style: solid; border-color: var(--clr-primary);
+    background: rgba(212,98,27,0.06);
+  }
+  .filters-expanded {
     display: none;
-    width: 100%;
-    padding: 0.6rem;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #B71C1C;
-    cursor: pointer;
-    margin-bottom: 1rem;
-    min-height: 44px;
+    background: var(--clr-bg-card);
+    border: 1px solid var(--clr-border-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-top: var(--space-sm);
+    box-shadow: 0 4px 16px var(--clr-shadow-dark);
+    animation: slide-down 0.3s ease;
   }
-
-  /* ── Results ── */
-  .results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .results-meta { font-size: 0.8rem; color: #999; }
-  .variant-badge {
-    background: #FFEBEE;
-    color: #B71C1C;
-    padding: 0.2rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.7rem;
-    font-weight: 600;
-  }
-  .sort-toggle {
-    font-size: 0.78rem;
-    color: #E53935;
-    cursor: pointer;
-    background: none;
-    border: none;
-    font-weight: 500;
-    min-height: 44px;
-    padding: 0 0.5rem;
-  }
-
-  .restaurant-card {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    transition: all 0.15s;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  }
-  .restaurant-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
-  .restaurant-card h3 { font-size: 1.05rem; font-weight: 600; color: #212121; margin-bottom: 0.3rem; }
-  .restaurant-card .meta { font-size: 0.8rem; color: #999; margin-bottom: 0.5rem; }
-  .restaurant-card .meta span { margin-right: 0.8rem; }
-  .tag-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.5rem; }
-  .tag {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.55rem;
-    background: #FFF5F5;
-    color: #B71C1C;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-  .score-bar-container { margin-top: 0.5rem; }
-  .score-label { font-size: 0.75rem; color: #999; margin-bottom: 0.25rem; }
-  .score-bar {
-    height: 6px;
-    background: #f0f0f0;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .score-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #E53935, #B71C1C);
-    border-radius: 3px;
-    transition: width 0.4s;
-  }
-
-  .card-reason {
-    margin-top: 0.75rem;
-    padding: 0.85rem 1rem;
-    background: linear-gradient(135deg, #FFF5F5 0%, #FFEBEE 100%);
-    border-left: 4px solid #E53935;
-    border-radius: 0 10px 10px 0;
-    font-size: 0.82rem;
-    color: #444;
-    line-height: 1.6;
-    box-shadow: 0 1px 4px rgba(229,57,53,0.08);
-  }
-  .card-reason.fallback {
-    border-left-color: #FFA726;
-    background: linear-gradient(135deg, #FFF8E1 0%, #FFF3E0 100%);
-    box-shadow: 0 1px 4px rgba(255,167,38,0.08);
-  }
-  .card-reason .reason-label {
-    font-weight: 700;
-    color: #B71C1C;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 0.35rem;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-  .card-reason.fallback .reason-label { color: #E65100; }
-
-  .feedback-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    align-items: center;
-  }
-  .btn-feedback {
-    padding: 0.35rem 0.8rem;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    cursor: pointer;
-    border: 1px solid #ddd;
-    background: #fff;
-    color: #666;
-    transition: all 0.2s;
-    min-height: 36px;
-  }
-  .btn-feedback:hover { border-color: #B71C1C; }
-  .btn-feedback.positive.voted { background: #E8F5E9; border-color: #43A047; color: #2E7D32; }
-  .btn-feedback.negative.voted { background: #FFEBEE; border-color: #E53935; color: #B71C1C; }
-  .btn-save {
-    padding: 0.35rem 0.8rem;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    cursor: pointer;
-    border: 1px solid #ddd;
-    background: #fff;
-    color: #666;
-    transition: all 0.2s;
-    min-height: 36px;
-    margin-left: auto;
-  }
-  .btn-save:hover { border-color: #FFA726; color: #E65100; }
-  .btn-save.saved { background: #FFF8E1; border-color: #FFA726; color: #E65100; }
-
-  /* ── Loading / Empty / Error ── */
-  .loading {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: #999;
-    font-size: 0.9rem;
-  }
-  .loading-dots { display: inline-flex; gap: 0.3rem; margin-top: 0.5rem; }
-  .loading-dots span {
-    width: 8px; height: 8px; background: #E53935; border-radius: 50%;
-    animation: dot-pulse 1.4s infinite ease-in-out both;
-  }
-  .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-  .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-  @keyframes dot-pulse {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1); }
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: #999;
-  }
-  .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-
-  .error-state {
-    background: #FFF5F5;
-    border: 1px solid #FFCDD2;
-    border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
-    color: #B71C1C;
-  }
-  .error-state .icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
-
-  /* ── Analytics View ── */
-  #viewAnalytics { display: none; }
-  .analytics-grid {
+  .filters-expanded.open { display: block; }
+  .filters-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: var(--space-md);
+  }
+  .filter-group label {
+    display: block; font-size: 0.78rem; font-weight: 600;
+    color: var(--clr-text-secondary); margin-bottom: 0.4rem;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .filter-search {
+    width: 100%; padding: 0.5rem 0.75rem;
+    border: 1px solid var(--clr-border); border-radius: var(--radius-sm);
+    font-size: 0.82rem; font-family: var(--font-body);
+    outline: none; margin-bottom: 0.5rem;
+    background: var(--clr-bg-linen); color: var(--clr-text-primary);
+    transition: border-color var(--transition-fast);
+  }
+  .filter-search:focus { border-color: var(--clr-primary); background: var(--clr-bg-card); }
+  .chip-group {
+    display: flex; flex-wrap: wrap; gap: 0.3rem;
+    max-height: 140px; overflow-y: auto;
+  }
+  .chip {
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem; font-weight: 500; cursor: pointer;
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-bg-card); color: var(--clr-text-secondary);
+    transition: all var(--transition-fast);
+    font-family: var(--font-body);
+  }
+  .chip:hover { border-color: var(--clr-primary-light); }
+  .chip.selected {
+    background: var(--clr-primary); color: #fff; border-color: var(--clr-primary);
+  }
+  .chip.hidden { display: none; }
+  .btn-show-more {
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem; font-weight: 600; cursor: pointer;
+    border: 1px dashed var(--clr-text-light);
+    background: transparent; color: var(--clr-primary);
+    font-family: var(--font-body);
+    display: inline-flex; align-items: center;
+    transition: all var(--transition-fast);
+  }
+  .btn-show-more:hover { border-color: var(--clr-primary); }
+  .filter-actions {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--clr-border-light);
+  }
+  .btn-apply-filters {
+    padding: 0.6rem 1.5rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-dark));
+    color: #fff; font-family: var(--font-body);
+    transition: all var(--transition-fast);
+    display: flex; align-items: center; gap: 0.4rem;
+    min-height: 40px;
+    box-shadow: 0 2px 8px rgba(212,98,27,0.25);
+  }
+  .btn-apply-filters:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(212,98,27,0.3);
+  }
+  .btn-apply-filters:active { transform: translateY(0); }
+  .btn-clear-filters {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--clr-border);
+    background: transparent; color: var(--clr-text-secondary);
+    font-family: var(--font-body);
+    transition: all var(--transition-fast);
+    min-height: 40px;
+  }
+  .btn-clear-filters:hover { border-color: var(--clr-error); color: var(--clr-error); }
+  .filter-count-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--clr-primary); color: #fff;
+    font-size: 0.65rem; font-weight: 700;
+    margin-left: 0.25rem;
+  }
+
+  /* ══════════════════════════════════════════
+     RESULTS
+     ══════════════════════════════════════════ */
+  .results-container {
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 var(--space-lg) var(--space-xl);
+  }
+  .results-header {
+    display: none;
+    justify-content: space-between; align-items: center;
+    margin-bottom: var(--space-md); flex-wrap: wrap; gap: 0.5rem;
+  }
+  .results-meta { font-size: 0.82rem; color: var(--clr-text-muted); }
+  .variant-badge {
+    display: none;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem; font-weight: 600;
+    background: var(--clr-bg-linen); color: var(--clr-primary);
+    margin-left: 0.5rem;
+  }
+  .results-actions { display: flex; gap: 0.25rem; }
+  .sort-toggle {
+    font-size: 0.8rem; color: var(--clr-primary); cursor: pointer;
+    background: none; border: none; font-weight: 500;
+    min-height: 44px; padding: 0 0.5rem;
+    font-family: var(--font-body);
+    transition: color var(--transition-fast);
+  }
+  .sort-toggle:hover { color: var(--clr-primary-dark); }
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+  @media (min-width: 1400px) {
+    .results-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ══════════════════════════════════════════
+     RESTAURANT CARD
+     ══════════════════════════════════════════ */
+  .restaurant-card {
+    background: var(--clr-bg-card);
+    border: 1px solid var(--clr-border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    box-shadow: 0 2px 8px var(--clr-shadow-dark);
+    opacity: 0; transform: translateY(20px);
+    animation: card-enter 0.5s ease forwards;
+  }
+  .restaurant-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(45,27,14,0.12);
+  }
+  .card-visual {
+    height: 120px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .card-visual[data-cuisine="indian"]   { background: linear-gradient(135deg, #D4621B, #F5A623); }
+  .card-visual[data-cuisine="chinese"]  { background: linear-gradient(135deg, #C0392B, #E74C3C); }
+  .card-visual[data-cuisine="italian"]  { background: linear-gradient(135deg, #27AE60, #2ECC71); }
+  .card-visual[data-cuisine="cafe"]     { background: linear-gradient(135deg, #8D6E63, #A1887F); }
+  .card-visual[data-cuisine="asian"]    { background: linear-gradient(135deg, #E67E22, #F39C12); }
+  .card-visual[data-cuisine="desserts"] { background: linear-gradient(135deg, #E91E63, #FF6090); }
+  .card-visual[data-cuisine="bbq"]      { background: linear-gradient(135deg, #BF360C, #FF5722); }
+  .card-visual[data-cuisine="seafood"]  { background: linear-gradient(135deg, #0277BD, #03A9F4); }
+  .card-visual[data-cuisine="default"]  { background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent)); }
+  .card-visual::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Ccircle cx='20' cy='20' r='4'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .card-visual-emoji {
+    font-size: 3rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    position: relative; z-index: 1;
+  }
+  .card-price-badge {
+    position: absolute; top: 0.75rem; right: 0.75rem;
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(8px);
+    color: #fff; padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem; font-weight: 600; z-index: 1;
+  }
+  .card-body { padding: 1rem 1.25rem 1.25rem; }
+  .card-body h3 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem; font-weight: 600;
+    color: var(--clr-text-primary);
+    margin-bottom: 0.4rem; line-height: 1.3;
+  }
+  .card-meta {
+    display: flex; align-items: center;
+    gap: 0.75rem; margin-bottom: 0.6rem; flex-wrap: wrap;
+  }
+  .card-rating {
+    display: flex; align-items: center; gap: 0.2rem;
+    font-size: 0.8rem; font-weight: 600;
+  }
+  .card-rating .stars { color: var(--clr-accent); letter-spacing: -1px; }
+  .card-rating .rating-num { color: var(--clr-text-primary); font-weight: 700; margin-left: 0.15rem; }
+  .card-location {
+    font-size: 0.78rem; color: var(--clr-text-muted);
+    display: flex; align-items: center; gap: 0.2rem;
+  }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.75rem; }
+  .card-tag {
+    font-size: 0.7rem; padding: 0.2rem 0.6rem;
+    background: var(--clr-bg-linen); color: var(--clr-primary);
+    border-radius: var(--radius-full); font-weight: 500;
+  }
+  .card-match {
+    display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;
+  }
+  .match-circle {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: conic-gradient(var(--clr-primary) calc(var(--score) * 1%), var(--clr-border-light) 0);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; flex-shrink: 0;
+  }
+  .match-circle::after {
+    content: ''; position: absolute; inset: 3px;
+    border-radius: 50%; background: var(--clr-bg-card);
+  }
+  .match-num {
+    position: relative; z-index: 1;
+    font-size: 0.62rem; font-weight: 700;
+    color: var(--clr-text-primary);
+  }
+  .match-label { font-size: 0.75rem; color: var(--clr-text-muted); }
+
+  /* AI Insight Chat Bubble */
+  .card-ai-insight {
+    position: relative;
+    background: var(--clr-bg-linen);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.82rem; color: var(--clr-text-secondary);
+    line-height: 1.55;
+  }
+  .card-ai-insight::before {
+    content: ''; position: absolute;
+    top: -6px; left: 1.25rem;
+    width: 12px; height: 12px;
+    background: var(--clr-bg-linen);
+    transform: rotate(45deg);
+  }
+  .card-ai-insight .insight-label {
+    font-size: 0.7rem; font-weight: 700;
+    color: var(--clr-primary);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 0.3rem;
+    display: flex; align-items: center; gap: 0.25rem;
+  }
+  .card-ai-insight.fallback {
+    background: #FFF8E1; border: 1px solid #FFECB3;
+  }
+  .card-ai-insight.fallback::before { background: #FFF8E1; }
+  .card-ai-insight.fallback .insight-label { color: #E65100; }
+
+  /* Card Actions */
+  .card-actions {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--clr-border-light);
+  }
+  .btn-heart {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-bg-card); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; transition: all var(--transition-fast);
+    color: var(--clr-text-light); flex-shrink: 0;
+  }
+  .btn-heart:hover { border-color: #E74C3C; color: #E74C3C; }
+  .btn-heart.saved {
+    background: #FDE8E5; border-color: #E74C3C; color: #E74C3C;
+    animation: heart-pop 0.3s ease;
+  }
+  .btn-card-action {
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem; cursor: pointer;
+    border: 1px solid var(--clr-border);
+    background: var(--clr-bg-card); color: var(--clr-text-secondary);
+    transition: all var(--transition-fast);
+    min-height: 36px; display: flex; align-items: center; gap: 0.25rem;
+    font-family: var(--font-body);
+  }
+  .btn-card-action:hover { border-color: var(--clr-primary); color: var(--clr-primary); }
+  .btn-card-action.positive.voted { background: var(--clr-success-light); border-color: var(--clr-success); color: var(--clr-success); }
+  .btn-card-action.negative.voted { background: var(--clr-error-light); border-color: var(--clr-error); color: var(--clr-error); }
+  .btn-maps {
+    margin-left: auto; color: var(--clr-primary);
+    font-weight: 500; text-decoration: none;
+    font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;
+  }
+  .btn-maps:hover { text-decoration: underline; }
+
+  /* ══════════════════════════════════════════
+     LOADING / EMPTY / ERROR STATES
+     ══════════════════════════════════════════ */
+  .skeleton-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-lg);
+  }
+  .skeleton-card {
+    background: var(--clr-bg-card);
+    border-radius: var(--radius-lg); overflow: hidden;
+    box-shadow: 0 2px 8px var(--clr-shadow-dark);
+  }
+  .skeleton-visual {
+    height: 120px;
+    background: linear-gradient(90deg, var(--clr-bg-linen) 25%, var(--clr-border-light) 50%, var(--clr-bg-linen) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  .skeleton-body { padding: 1rem 1.25rem; }
+  .skeleton-line {
+    height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg, var(--clr-bg-linen) 25%, var(--clr-border-light) 50%, var(--clr-bg-linen) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    margin-bottom: 0.6rem;
+  }
+  .skeleton-line:nth-child(1) { width: 70%; height: 18px; }
+  .skeleton-line:nth-child(2) { width: 50%; }
+  .skeleton-line:nth-child(3) { width: 90%; }
+  .skeleton-line:nth-child(4) { width: 60%; }
+  .loading-message {
+    text-align: center; padding: var(--space-lg);
+    color: var(--clr-text-muted); font-size: 0.9rem;
+  }
+  .loading-message .loading-icon {
+    font-size: 2.5rem;
+    animation: pulse-search 1.2s infinite ease-in-out;
+    margin-bottom: var(--space-sm); display: block;
+  }
+  .empty-state {
+    text-align: center;
+    padding: var(--space-3xl) var(--space-lg);
+    color: var(--clr-text-muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: var(--space-md); }
+  .empty-state h3 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem; color: var(--clr-text-secondary);
+    margin-bottom: var(--space-sm);
+  }
+  .empty-state p { font-size: 0.9rem; margin-bottom: var(--space-lg); }
+  .empty-state .suggested-searches {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem;
+  }
+  .error-state {
+    text-align: center; padding: var(--space-xl);
+    background: var(--clr-error-light);
+    border: 1px solid rgba(192,57,43,0.15);
+    border-radius: var(--radius-md);
+    color: var(--clr-error);
+  }
+  .error-state .icon { font-size: 2rem; margin-bottom: var(--space-sm); }
+
+  /* ══════════════════════════════════════════
+     SAVED VIEW
+     ══════════════════════════════════════════ */
+  .saved-container {
+    max-width: 900px; margin: 0 auto; padding: var(--space-xl) var(--space-lg);
+  }
+  .saved-container h2 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem; margin-bottom: var(--space-md);
+    color: var(--clr-text-primary);
+  }
+  .saved-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md);
+  }
+  .saved-card {
+    background: var(--clr-bg-card);
+    border: 1px solid var(--clr-border-light);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px var(--clr-shadow-dark);
+    transition: transform var(--transition-fast);
+  }
+  .saved-card:hover { transform: translateY(-2px); }
+  .saved-card h3 {
+    font-family: var(--font-heading);
+    font-size: 1rem; margin-bottom: 0.3rem;
+  }
+  .saved-card .meta {
+    font-size: 0.78rem; color: var(--clr-text-muted);
+    margin-bottom: 0.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;
+  }
+  .saved-card .btn-remove {
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem; cursor: pointer;
+    border: 1px solid var(--clr-border);
+    background: var(--clr-bg-card); color: var(--clr-text-muted);
+    font-family: var(--font-body);
+    transition: all var(--transition-fast);
+  }
+  .saved-card .btn-remove:hover { border-color: var(--clr-error); color: var(--clr-error); }
+
+  /* ══════════════════════════════════════════
+     ADMIN DASHBOARD
+     ══════════════════════════════════════════ */
+  .admin-container {
+    max-width: 1100px; margin: 0 auto; padding: var(--space-xl) var(--space-lg);
+  }
+  .admin-header { margin-bottom: var(--space-xl); }
+  .admin-title {
+    font-family: var(--font-heading);
+    font-size: 1.75rem; color: var(--clr-text-primary);
+    margin-bottom: 0.25rem;
+  }
+  .admin-subtitle { font-size: 0.9rem; color: var(--clr-text-muted); }
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
   }
   .stat-card {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    padding: 1.25rem;
-    text-align: center;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    background: var(--clr-bg-card);
+    border: 1px solid var(--clr-border-light);
+    border-radius: var(--radius-md);
+    padding: 1.25rem; text-align: center;
+    box-shadow: 0 1px 4px var(--clr-shadow-dark);
+    transition: transform var(--transition-fast);
   }
+  .stat-card:hover { transform: translateY(-2px); }
   .stat-card .value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #B71C1C;
+    font-size: 1.75rem; font-weight: 700;
+    font-family: var(--font-heading);
+    color: var(--clr-primary);
   }
   .stat-card .label {
-    font-size: 0.78rem;
-    color: #999;
-    margin-top: 0.25rem;
+    font-size: 0.75rem; color: var(--clr-text-muted); margin-top: 0.25rem;
   }
-
   .charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md); margin-bottom: var(--space-xl);
   }
   .chart-card {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 12px;
+    background: var(--clr-bg-card);
+    border: 1px solid var(--clr-border-light);
+    border-radius: var(--radius-md);
     padding: 1.5rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 4px var(--clr-shadow-dark);
   }
   .chart-card h3 {
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #B71C1C;
-    margin-bottom: 1rem;
+    font-size: 0.78rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--clr-secondary); margin-bottom: 1rem;
+    font-family: var(--font-body);
   }
   .chart-container { position: relative; height: 220px; }
-
-  /* A/B Section */
   .ab-section {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    background: var(--clr-bg-card);
+    border: 1px solid var(--clr-border-light);
+    border-radius: var(--radius-md);
+    padding: 1.5rem; margin-bottom: var(--space-lg);
+    box-shadow: 0 1px 4px var(--clr-shadow-dark);
   }
   .ab-section h3 {
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #B71C1C;
-    margin-bottom: 1rem;
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--clr-secondary); margin-bottom: 1rem;
+    font-family: var(--font-body);
+    text-transform: uppercase; letter-spacing: 0.04em;
   }
   .ab-variants {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
   }
   .ab-variant-card {
-    border: 1px solid #eee;
-    border-radius: 10px;
-    padding: 1.25rem;
-    text-align: center;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem; text-align: center;
     position: relative;
   }
   .ab-variant-card.winner {
-    border-color: #43A047;
-    background: #F1F8E9;
+    border-color: var(--clr-success);
+    background: var(--clr-success-light);
   }
   .winner-badge {
-    position: absolute;
-    top: -10px;
-    right: 12px;
-    background: #43A047;
-    color: #fff;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 0.2rem 0.6rem;
-    border-radius: 10px;
+    position: absolute; top: -10px; right: 1rem;
+    background: var(--clr-success); color: #fff;
+    padding: 0.15rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem; font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
   }
-  .ab-variant-card .variant-letter {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #B71C1C;
-    margin-bottom: 0.25rem;
+  .variant-letter {
+    font-family: var(--font-heading);
+    font-size: 1.25rem; font-weight: 700;
+    color: var(--clr-secondary); margin-bottom: 0.25rem;
   }
-  .ab-variant-card .variant-desc {
-    font-size: 0.75rem;
-    color: #999;
-    margin-bottom: 0.75rem;
+  .variant-desc {
+    font-size: 0.78rem; color: var(--clr-text-muted); margin-bottom: 0.75rem;
   }
-  .ab-variant-card .variant-stat {
-    font-size: 0.82rem;
-    color: #555;
-    margin-bottom: 0.25rem;
+  .variant-stat {
+    font-size: 0.8rem; color: var(--clr-text-secondary); margin-bottom: 0.3rem;
   }
-  .ab-variant-card .variant-stat strong { color: #212121; }
-  .ab-variant-card .satisfaction {
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-top: 0.5rem;
+  .satisfaction {
+    font-size: 1.5rem; font-weight: 700;
+    font-family: var(--font-heading);
+    margin: 0.5rem 0 0.15rem;
   }
-  .sat-good { color: #43A047; }
-  .sat-neutral { color: #999; }
-
-  /* Cache Stats */
+  .sat-good { color: var(--clr-success); }
+  .sat-neutral { color: var(--clr-text-muted); }
   .cache-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
   }
 
-  /* ── Saved View ── */
-  #viewSaved { display: none; }
-  .saved-empty {
-    text-align: center;
-    padding: 3rem;
-    color: #999;
-  }
-
-  /* ── Toast ── */
+  /* ══════════════════════════════════════════
+     TOAST & MODAL
+     ══════════════════════════════════════════ */
   .toast {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    background: #fff;
-    color: #333;
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--clr-bg-card); color: var(--clr-text-primary);
     padding: 0.75rem 1.25rem;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 0.85rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    border-left: 4px solid #E53935;
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s;
-    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(45,27,14,0.15);
+    border-left: 4px solid var(--clr-primary);
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s ease;
+    z-index: var(--z-toast); font-family: var(--font-body);
   }
   .toast.show { transform: translateY(0); opacity: 1; }
-
-  /* ── Share Modal ── */
   .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 999;
-    align-items: center;
-    justify-content: center;
+    display: none; position: fixed; inset: 0;
+    background: rgba(45,27,14,0.5);
+    backdrop-filter: blur(4px);
+    z-index: var(--z-modal);
+    align-items: center; justify-content: center;
   }
   .modal-overlay.open { display: flex; }
   .modal-box {
-    background: #fff;
-    border-radius: 12px;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    background: var(--clr-bg-card);
+    border-radius: var(--radius-lg);
+    padding: 2rem; max-width: 500px; width: 90%;
+    box-shadow: 0 20px 60px rgba(45,27,14,0.2);
+    animation: modal-enter 0.3s ease;
   }
-  .modal-box h3 { font-size: 1rem; margin-bottom: 1rem; color: #212121; }
+  .modal-box h3 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem; margin-bottom: 1rem;
+    color: var(--clr-text-primary);
+  }
   .modal-box input {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    margin-bottom: 0.75rem;
-    outline: none;
+    width: 100%; padding: 0.6rem 0.75rem;
+    border: 1px solid var(--clr-border); border-radius: var(--radius-sm);
+    font-size: 0.85rem; font-family: var(--font-body);
+    background: var(--clr-bg-linen); color: var(--clr-text-primary);
+    margin-bottom: 1rem;
   }
-  .modal-box input:focus { border-color: #E53935; }
-  .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; }
+  .modal-actions {
+    display: flex; justify-content: flex-end; gap: 0.5rem;
+  }
   .modal-actions button {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    min-height: 44px;
+    padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+    font-size: 0.85rem; cursor: pointer;
+    font-family: var(--font-body); font-weight: 600;
+    transition: all var(--transition-fast);
   }
-  .modal-actions .btn-cancel { background: #f5f5f5; border: 1px solid #ddd; color: #666; }
-  .modal-actions .btn-copy { background: #B71C1C; border: none; color: #fff; font-weight: 600; }
+  .btn-cancel {
+    background: var(--clr-bg-linen); border: 1px solid var(--clr-border);
+    color: var(--clr-text-secondary);
+  }
+  .btn-cancel:hover { border-color: var(--clr-text-muted); }
+  .btn-copy {
+    background: var(--clr-primary); border: none; color: #fff;
+  }
+  .btn-copy:hover { background: var(--clr-primary-dark); }
 
-  /* ── Mobile ── */
+  /* ══════════════════════════════════════════
+     ANIMATIONS
+     ══════════════════════════════════════════ */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes card-enter {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes heart-pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  @keyframes pulse-search {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.5; }
+  }
+  @keyframes slide-down {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes modal-enter {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-up-sheet {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* ══════════════════════════════════════════
+     RESPONSIVE
+     ══════════════════════════════════════════ */
+  /* Tablet and below */
   @media (max-width: 768px) {
+    header { padding: 0.75rem 1rem 0; position: relative; }
     .hamburger { display: flex; }
     .user-badge .user-name { display: none; }
     .nav-tabs {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: #fff;
-      border-bottom: 1px solid #eee;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      z-index: 100;
+      display: none; flex-direction: column;
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--clr-bg-card);
+      border-bottom: 1px solid var(--clr-border-light);
+      box-shadow: 0 4px 12px var(--clr-shadow-dark);
+      z-index: var(--z-dropdown);
     }
     .nav-tabs.open { display: flex; }
-    .nav-tab { padding: 0.9rem 1.5rem; border-bottom: none; border-left: 3px solid transparent; }
-    .nav-tab.active { border-left-color: #B71C1C; border-bottom-color: transparent; }
-
-    .container {
-      grid-template-columns: 1fr;
-      padding: 1rem;
+    .nav-tab {
+      padding: 0.9rem 1.5rem;
+      border-bottom: none;
+      border-left: 3px solid transparent;
     }
-    .filters { position: static; }
-    .btn-toggle-filters { display: block; }
-    .filters-collapsible { display: none; }
-    .filters-collapsible.open { display: block; }
-
+    .nav-tab.active { border-left-color: var(--clr-primary); border-bottom-color: transparent; }
+    .results-grid, .skeleton-grid { grid-template-columns: 1fr; }
     .charts-grid { grid-template-columns: 1fr; }
     .ab-variants { grid-template-columns: 1fr; }
     .analytics-grid { grid-template-columns: repeat(2, 1fr); }
+    .cache-grid { grid-template-columns: repeat(2, 1fr); }
+    .filters-expanded {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      max-height: 75vh; overflow-y: auto;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      z-index: var(--z-modal);
+      animation: slide-up-sheet 0.3s ease;
+      margin-top: 0;
+    }
+    .filters-grid { grid-template-columns: 1fr; }
+    .card-visual { height: 100px; }
+    .hero-search { padding: var(--space-xl) var(--space-md) var(--space-lg); }
+    .hero-title { font-size: 1.6rem; }
+    .results-container { padding: 0 var(--space-md) var(--space-lg); }
+    .filters-bar { padding: var(--space-md); }
+    .filters-summary { gap: 0.35rem; }
+    .active-filter-tag { font-size: 0.7rem; padding: 0.2rem 0.5rem; }
+  }
+
+  /* Small phones */
+  @media (max-width: 480px) {
+    .hero-search { padding: var(--space-lg) var(--space-sm) var(--space-md); }
+    .hero-title { font-size: 1.35rem; }
+    .hero-subtitle { font-size: 0.85rem; }
+    .occasion-pills { gap: 0.3rem; justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0.5rem; -webkit-overflow-scrolling: touch; }
+    .occasion-pill { font-size: 0.75rem; padding: 0.35rem 0.65rem; flex-shrink: 0; }
+    .search-bar { font-size: 0.9rem; padding: 0.75rem 3rem 0.75rem 0.85rem; min-height: 48px; }
+    .search-bar-icon { width: 38px; height: 38px; font-size: 0.95rem; }
+    .card-body { padding: 0.85rem 1rem 1rem; }
+    .card-body h3 { font-size: 0.95rem; }
+    .card-actions { flex-wrap: wrap; gap: 0.35rem; }
+    .btn-card-action { font-size: 0.7rem; padding: 0.3rem 0.5rem; min-height: 32px; }
+    .btn-heart { width: 32px; height: 32px; font-size: 0.85rem; }
+    .header-top { gap: 0.5rem; }
+    .btn-logout { padding: 0.25rem 0.6rem; font-size: 0.7rem; min-height: 36px; }
+    .role-pill { font-size: 0.6rem; padding: 0.15rem 0.45rem; }
+    .results-header { flex-direction: column; align-items: flex-start; }
+    .filter-actions { flex-direction: column; }
+    .btn-apply-filters { width: 100%; justify-content: center; }
+    .btn-clear-filters { width: 100%; text-align: center; }
+    .stat-card .value { font-size: 1.25rem; }
+    .stat-card .label { font-size: 0.65rem; }
+    .admin-container { padding: var(--space-md); }
+    .saved-container { padding: var(--space-md); }
   }
 </style>
 </head>
@@ -761,151 +1026,193 @@
 <div id="viewLogin">
   <div class="login-card">
     <div class="logo">Foodie<span>AI</span></div>
-    <div class="subtitle">Smart Restaurant Finder</div>
-    <form id="loginForm" onsubmit="handleLogin(event)">
+    <div class="subtitle">Your AI Dining Assistant</div>
+    <form onsubmit="handleLogin(event)">
       <input type="text" id="loginUser" placeholder="Username" autocomplete="username" required>
       <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password" required>
       <button type="submit" class="btn-login">Sign In</button>
     </form>
-    <div class="login-error" id="loginError">Invalid username or password</div>
-    <div class="login-hint">
-      Demo accounts:<br>
-      <code>user / user123</code> &mdash; standard user<br>
-      <code>admin / admin123</code> &mdash; admin dashboard
-    </div>
+    <div id="loginError" class="login-error">Invalid credentials</div>
+    <div class="login-hint">Demo: <strong>user</strong> / user123 &nbsp;|&nbsp; <strong>admin</strong> / admin123</div>
   </div>
 </div>
 
 <!-- ═══════════ APP HEADER ═══════════ -->
 <header id="appHeader">
   <div class="header-top">
-    <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">&#9776;</button>
+    <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">&#x2630;</button>
     <div class="header-brand">
       <div class="logo">Foodie<span>AI</span></div>
-      <div class="subtitle">AI-Powered Restaurant Recommendations</div>
+      <div class="subtitle">Your AI Dining Assistant</div>
     </div>
     <div class="user-badge">
       <span class="user-name" id="userName"></span>
       <span class="role-pill" id="userRole"></span>
-      <button class="btn-logout" onclick="handleLogout()">Logout</button>
+      <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
     </div>
   </div>
-  <div class="nav-tabs" id="navTabs">
+  <nav class="nav-tabs" id="navTabs">
     <div class="nav-tab active" data-view="search" onclick="switchTab(this)">Search</div>
     <div class="nav-tab" data-view="saved" onclick="switchTab(this)">Saved</div>
-    <div class="nav-tab admin-only" data-view="analytics" onclick="switchTab(this)">Analytics</div>
-  </div>
+    <div class="nav-tab admin-only" data-view="analytics" onclick="switchTab(this)" style="display:none;">Analytics</div>
+  </nav>
 </header>
 
 <!-- ═══════════ SEARCH VIEW ═══════════ -->
-<div class="container" id="viewSearch" style="display:none;">
-  <aside class="filters card">
-    <div class="card-title">Filters</div>
-    <button class="btn-toggle-filters" onclick="toggleFilters()">Show / Hide Filters</button>
-    <div class="filters-collapsible open" id="filtersBody">
-      <div class="filter-group ai-search-hero">
-        <label class="ai-search-label">Ask AI — Describe what you're looking for</label>
-        <div class="ai-search-hint">Our AI reads your description and re-ranks restaurants to match your vibe. Try something like <em>"quiet rooftop with a view"</em> or <em>"cheap spicy food near me"</em>.</div>
-        <input type="text" id="filterFreeText" class="ai-search-input" placeholder="">
+<div id="viewSearch" style="display:none;">
+
+  <!-- Hero Section -->
+  <section class="hero-search">
+    <div class="hero-search-inner">
+      <h1 class="hero-title">What are you craving tonight?</h1>
+      <p class="hero-subtitle">Describe your perfect meal and let AI find the best spots for you</p>
+      <div class="search-bar-wrapper">
+        <input type="text" id="filterFreeText" class="search-bar" placeholder="">
+        <button class="search-bar-icon" id="btnSearch" onclick="doSearch()" aria-label="Search">&#x1F50D;</button>
       </div>
-      <div class="filter-group">
-        <label>Locations</label>
-        <input type="text" class="filter-search" id="locationSearch" placeholder="Search locations..." oninput="filterChips('location')">
-        <div class="chip-group" id="locationChips"></div>
+      <div class="occasion-pills" id="occasionPills">
+        <button class="occasion-pill" data-query="romantic dinner for two, candlelit ambiance" onclick="selectOccasion(this)">
+          <span class="pill-emoji">&#x1F496;</span> Date Night
+        </button>
+        <button class="occasion-pill" data-query="birthday celebration, festive, good for groups" onclick="selectOccasion(this)">
+          <span class="pill-emoji">&#x1F382;</span> Birthday
+        </button>
+        <button class="occasion-pill" data-query="quiet cafe with wifi, good coffee, work-friendly" onclick="selectOccasion(this)">
+          <span class="pill-emoji">&#x1F4BB;</span> Work Cafe
+        </button>
+        <button class="occasion-pill" data-query="family-friendly brunch, kids welcome, relaxed" onclick="selectOccasion(this)">
+          <span class="pill-emoji">&#x1F95E;</span> Family Brunch
+        </button>
+        <button class="occasion-pill" data-query="quick affordable meal, fast service" onclick="selectOccasion(this)">
+          <span class="pill-emoji">&#x26A1;</span> Quick Bite
+        </button>
+        <button class="occasion-pill" data-query="late night food, open late, midnight cravings" onclick="selectOccasion(this)">
+          <span class="pill-emoji">&#x1F319;</span> Late Night
+        </button>
+        <button class="occasion-pill" data-query="healthy food, salads, organic, light meals" onclick="selectOccasion(this)">
+          <span class="pill-emoji">&#x1F96C;</span> Healthy
+        </button>
+        <button class="occasion-pill" data-query="street food, casual, local flavors, chaat" onclick="selectOccasion(this)">
+          <span class="pill-emoji">&#x1F35C;</span> Street Food
+        </button>
       </div>
-      <div class="filter-group">
-        <label>Cuisines</label>
-        <input type="text" class="filter-search" id="cuisineSearch" placeholder="Search cuisines..." oninput="filterChips('cuisine')">
-        <div class="chip-group" id="cuisineChips"></div>
-      </div>
-      <div class="filter-group">
-        <label>Minimum Rating: <strong id="ratingValue">0</strong> / 5</label>
-        <input type="range" id="filterRating" min="0" max="5" step="0.5" value="0" oninput="document.getElementById('ratingValue').textContent=this.value" style="width:100%;accent-color:#B71C1C;">
-      </div>
-      <div class="filter-group">
-        <label>Price Range</label>
-        <div class="chip-group" id="priceChips">
-          <div class="chip" onclick="toggleChip(this)" data-value="$">$ Budget</div>
-          <div class="chip" onclick="toggleChip(this)" data-value="$$">$$ Moderate</div>
-          <div class="chip" onclick="toggleChip(this)" data-value="$$$">$$$ Premium</div>
-          <div class="chip" onclick="toggleChip(this)" data-value="$$$$">$$$$ Fine Dining</div>
+    </div>
+  </section>
+
+  <!-- Inline Filters -->
+  <section class="filters-bar" id="filtersBar">
+    <div class="filters-summary" id="filtersSummary">
+      <button class="more-filters-toggle" id="filtersToggleBtn" onclick="toggleExpandedFilters()">
+        &#x2699; Filters
+      </button>
+      <span id="activeFilterTags"></span>
+    </div>
+    <div class="filters-expanded" id="filtersExpanded">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label>Location</label>
+          <input type="text" class="filter-search" id="locationSearch" placeholder="Search locations..." oninput="filterChips('location')">
+          <div class="chip-group" id="locationChips"></div>
+        </div>
+        <div class="filter-group">
+          <label>Cuisine</label>
+          <input type="text" class="filter-search" id="cuisineSearch" placeholder="Search cuisines..." oninput="filterChips('cuisine')">
+          <div class="chip-group" id="cuisineChips"></div>
+        </div>
+        <div class="filter-group">
+          <label>Minimum Rating: <strong id="ratingValue">0</strong> / 5</label>
+          <input type="range" id="filterRating" min="0" max="5" step="0.5" value="0"
+            oninput="document.getElementById('ratingValue').textContent=this.value"
+            style="width:100%;accent-color:var(--clr-primary);">
+        </div>
+        <div class="filter-group">
+          <label>Price Range</label>
+          <div class="chip-group" id="priceChips">
+            <div class="chip" onclick="toggleChip(this)" data-value="$">$ Budget</div>
+            <div class="chip" onclick="toggleChip(this)" data-value="$$">$$ Moderate</div>
+            <div class="chip" onclick="toggleChip(this)" data-value="$$$">$$$ Premium</div>
+            <div class="chip" onclick="toggleChip(this)" data-value="$$$$">$$$$ Fine Dining</div>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>Results Limit</label>
+          <input type="number" id="filterLimit" min="1" max="20" value="5"
+            style="width:80px;padding:0.5rem;border:1px solid var(--clr-border);border-radius:var(--radius-sm);font-family:var(--font-body);background:var(--clr-bg-linen);">
         </div>
       </div>
-      <div class="filter-group">
-        <label>Results</label>
-        <input type="number" id="filterLimit" min="1" max="20" value="5">
+      <div class="filter-actions">
+        <button class="btn-apply-filters" onclick="applyFilters()">&#x1F50D; Apply Filters</button>
+        <button class="btn-clear-filters" onclick="clearAllFilters()">Clear All</button>
       </div>
-      <button class="btn-search" id="btnSearch" onclick="doSearch()">Find Restaurants</button>
     </div>
-  </aside>
+  </section>
 
-  <main>
-    <div class="results-header" id="resultsHeader" style="display:none;">
+  <!-- Results -->
+  <section class="results-container">
+    <div class="results-header" id="resultsHeader">
       <div>
         <span class="results-meta" id="resultsMeta"></span>
-        <span class="variant-badge" id="variantBadge" style="display:none;"></span>
+        <span class="variant-badge" id="variantBadge"></span>
       </div>
-      <div>
+      <div class="results-actions">
         <button class="sort-toggle" onclick="toggleSort()">&#x21C5; Re-sort</button>
-        <button class="sort-toggle" onclick="openShareModal()">Share</button>
+        <button class="sort-toggle" onclick="openShareModal()">&#x1F517; Share</button>
       </div>
     </div>
     <div id="resultsArea">
       <div class="empty-state">
-        <div class="icon">&#x1F374;</div>
-        <p>Choose your filters and hit <strong>Find Restaurants</strong></p>
+        <div class="icon">&#x1F37D;</div>
+        <h3>Discover your next favorite meal</h3>
+        <p>Type what you're craving above, or tap an occasion to get started</p>
+        <div class="suggested-searches">
+          <button class="occasion-pill" onclick="selectOccasion(this)" data-query="best rated restaurants">
+            <span class="pill-emoji">&#x2B50;</span> Top Rated
+          </button>
+          <button class="occasion-pill" onclick="selectOccasion(this)" data-query="cheap eats under 500 rupees">
+            <span class="pill-emoji">&#x1F4B0;</span> Budget Eats
+          </button>
+          <button class="occasion-pill" onclick="selectOccasion(this)" data-query="best biryani in Bangalore">
+            <span class="pill-emoji">&#x1F35B;</span> Best Biryani
+          </button>
+        </div>
       </div>
     </div>
     <div id="errorArea" style="display:none;"></div>
-  </main>
+  </section>
 </div>
 
 <!-- ═══════════ SAVED VIEW ═══════════ -->
 <div id="viewSaved" style="display:none;">
-  <div style="max-width:900px;margin:0 auto;padding:2rem 1.5rem;">
-    <div class="card-title">Saved Recommendations</div>
+  <div class="saved-container">
+    <h2>Saved Restaurants</h2>
     <div id="savedList">
-      <div class="saved-empty">
-        <div class="icon" style="font-size:2rem;margin-bottom:0.5rem;">&#x1F516;</div>
-        <p>No saved recommendations yet. Share a search to save it!</p>
+      <div class="empty-state">
+        <div class="icon">&#x2764;</div>
+        <h3>No saved restaurants yet</h3>
+        <p>Tap the heart on any restaurant card to save it here</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ ANALYTICS VIEW ═══════════ -->
+<!-- ═══════════ ANALYTICS (ADMIN) ═══════════ -->
 <div id="viewAnalytics" style="display:none;">
-  <div style="max-width:1100px;margin:0 auto;padding:2rem 1.5rem;">
-    <div class="card-title">Admin Dashboard</div>
-
+  <div class="admin-container">
+    <div class="admin-header">
+      <h2 class="admin-title">Admin Dashboard</h2>
+      <p class="admin-subtitle">Analytics and performance overview</p>
+    </div>
     <div class="analytics-grid" id="statsCards"></div>
-
     <div class="charts-grid">
-      <div class="chart-card">
-        <h3>Top Locations</h3>
-        <div class="chart-container"><canvas id="chartLocations"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>Top Cuisines</h3>
-        <div class="chart-container"><canvas id="chartCuisines"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>Price Distribution</h3>
-        <div class="chart-container"><canvas id="chartPrices"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>Feedback Breakdown</h3>
-        <div class="chart-container"><canvas id="chartFeedback"></canvas></div>
-      </div>
+      <div class="chart-card"><h3>Top Locations</h3><div class="chart-container"><canvas id="chartLocations"></canvas></div></div>
+      <div class="chart-card"><h3>Top Cuisines</h3><div class="chart-container"><canvas id="chartCuisines"></canvas></div></div>
+      <div class="chart-card"><h3>Price Distribution</h3><div class="chart-container"><canvas id="chartPrices"></canvas></div></div>
+      <div class="chart-card"><h3>Feedback Breakdown</h3><div class="chart-container"><canvas id="chartFeedback"></canvas></div></div>
     </div>
-
-    <div class="ab-section" id="abSection">
-      <h3>A/B Test — Scoring Weights</h3>
-      <div class="ab-variants" id="abVariants">
-        <div class="empty-state" style="padding:1rem;grid-column:span 2;">Loading…</div>
-      </div>
+    <div class="ab-section">
+      <h3>A/B Test Results</h3>
+      <div class="ab-variants" id="abVariants"></div>
     </div>
-
     <div class="ab-section">
       <h3>Cache Performance</h3>
       <div class="cache-grid" id="cacheStats"></div>
@@ -916,16 +1223,16 @@
 <!-- ═══════════ SHARE MODAL ═══════════ -->
 <div class="modal-overlay" id="shareModal">
   <div class="modal-box">
-    <h3>Share Recommendations</h3>
+    <h3>Share This Search</h3>
     <input type="text" id="shareUrl" readonly>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeShareModal()">Close</button>
+      <button class="btn-cancel" onclick="closeShareModal()">Cancel</button>
       <button class="btn-copy" onclick="copyShareUrl()">Copy Link</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ TOAST ═══════════ -->
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -935,6 +1242,149 @@ let lastResults = null;
 let lastQuery = null;
 let sortAsc = false;
 let chartInstances = {};
+const VISIBLE_CHIPS = 5;
+let allLocations = [];
+let allCuisines = [];
+let savedRestaurants = JSON.parse(localStorage.getItem('savedRestaurants') || '[]');
+
+/* ─── Cuisine Mappings ─── */
+const CUISINE_EMOJI_MAP = {
+  'north indian':'&#x1F35B;','south indian':'&#x1F35B;','indian':'&#x1F35B;',
+  'mughlai':'&#x1F357;','biryani':'&#x1F35A;','awadhi':'&#x1F35B;',
+  'andhra':'&#x1F336;','chettinad':'&#x1F336;','rajasthani':'&#x1F35B;',
+  'hyderabadi':'&#x1F35A;','lucknowi':'&#x1F357;','kashmiri':'&#x1F356;',
+  'chinese':'&#x1F961;','cantonese':'&#x1F95F;',
+  'asian':'&#x1F35C;','japanese':'&#x1F363;','korean':'&#x1F372;',
+  'thai':'&#x1F35C;','vietnamese':'&#x1F35C;','burmese':'&#x1F35C;',
+  'italian':'&#x1F355;','pizza':'&#x1F355;','pasta':'&#x1F35D;',
+  'continental':'&#x1F37D;','european':'&#x1F377;','french':'&#x1F950;',
+  'greek':'&#x1F957;','mediterranean':'&#x1F957;',
+  'american':'&#x1F354;','burger':'&#x1F354;','mexican':'&#x1F32E;',
+  'arabian':'&#x1F9C6;','lebanese':'&#x1F9C6;','turkish':'&#x1F9C6;',
+  'cafe':'&#x2615;','coffee':'&#x2615;','bakery':'&#x1F9C1;',
+  'desserts':'&#x1F370;','ice cream':'&#x1F366;','beverages':'&#x1F964;',
+  'fast food':'&#x1F35F;','street food':'&#x1F32F;',
+  'bbq':'&#x1F356;','grill':'&#x1F969;','kebab':'&#x1F362;',
+  'seafood':'&#x1F990;','sushi':'&#x1F363;',
+  'bengali':'&#x1F41F;','goan':'&#x1F980;',
+  'healthy':'&#x1F957;','salad':'&#x1F957;',
+  'bar food':'&#x1F37A;','drinks only':'&#x1F378;',
+  'default':'&#x1F374;'
+};
+
+const CUISINE_GRADIENT_MAP = {
+  'north indian':'indian','south indian':'indian','indian':'indian',
+  'mughlai':'indian','biryani':'indian','awadhi':'indian',
+  'andhra':'indian','chettinad':'indian','rajasthani':'indian',
+  'hyderabadi':'indian','lucknowi':'indian','kashmiri':'indian',
+  'chinese':'chinese','cantonese':'chinese',
+  'asian':'asian','japanese':'asian','thai':'asian',
+  'korean':'asian','vietnamese':'asian','burmese':'asian',
+  'italian':'italian','pizza':'italian','pasta':'italian',
+  'continental':'italian','european':'italian','french':'italian',
+  'greek':'italian','mediterranean':'italian',
+  'cafe':'cafe','coffee':'cafe','bakery':'cafe',
+  'desserts':'desserts','ice cream':'desserts',
+  'bbq':'bbq','grill':'bbq','kebab':'bbq',
+  'seafood':'seafood','bengali':'seafood','goan':'seafood',
+};
+
+function getCuisineEmoji(cuisines) {
+  if (!cuisines || !cuisines.length) return CUISINE_EMOJI_MAP['default'];
+  for (const c of cuisines) {
+    const key = c.toLowerCase();
+    if (CUISINE_EMOJI_MAP[key]) return CUISINE_EMOJI_MAP[key];
+  }
+  return CUISINE_EMOJI_MAP['default'];
+}
+
+function getCuisineGradient(cuisines) {
+  if (!cuisines || !cuisines.length) return 'default';
+  for (const c of cuisines) {
+    const key = c.toLowerCase();
+    if (CUISINE_GRADIENT_MAP[key]) return CUISINE_GRADIENT_MAP[key];
+  }
+  return 'default';
+}
+
+/* ─── Occasion Selection ─── */
+function selectOccasion(el) {
+  document.querySelectorAll('.occasion-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('filterFreeText').value = el.dataset.query;
+  doSearch();
+}
+
+function toggleExpandedFilters() {
+  document.getElementById('filtersExpanded').classList.toggle('open');
+}
+
+function applyFilters() {
+  document.getElementById('filtersExpanded').classList.remove('open');
+  updateActiveFilterTags();
+  doSearch();
+}
+
+function clearAllFilters() {
+  document.querySelectorAll('#locationChips .chip.selected, #cuisineChips .chip.selected, #priceChips .chip.selected').forEach(c => c.classList.remove('selected'));
+  document.getElementById('filterRating').value = '0';
+  document.getElementById('ratingValue').textContent = '0';
+  document.getElementById('filterLimit').value = '5';
+  document.getElementById('locationSearch').value = '';
+  document.getElementById('cuisineSearch').value = '';
+  filterChips('location');
+  filterChips('cuisine');
+  updateActiveFilterTags();
+}
+
+function updateActiveFilterTags() {
+  const tags = [];
+  const selLoc = [...document.querySelectorAll('#locationChips .chip.selected')].map(c => c.dataset.value);
+  const selCui = [...document.querySelectorAll('#cuisineChips .chip.selected')].map(c => c.dataset.value);
+  const selPrice = [...document.querySelectorAll('#priceChips .chip.selected')].map(c => c.dataset.value);
+  const rating = parseFloat(document.getElementById('filterRating').value);
+
+  selLoc.forEach(v => tags.push({ label: v, type: 'location' }));
+  selCui.forEach(v => tags.push({ label: v, type: 'cuisine' }));
+  selPrice.forEach(v => tags.push({ label: v, type: 'price' }));
+  if (rating > 0) tags.push({ label: `${rating}+ stars`, type: 'rating' });
+
+  const container = document.getElementById('activeFilterTags');
+  container.innerHTML = tags.map(t =>
+    `<span class="active-filter-tag">${t.label}<span class="remove-tag" onclick="removeFilterTag('${t.type}','${t.label}')">&times;</span></span>`
+  ).join('');
+
+  const btn = document.getElementById('filtersToggleBtn');
+  const count = tags.length;
+  if (count > 0) {
+    btn.classList.add('has-filters');
+    btn.innerHTML = `&#x2699; Filters <span class="filter-count-badge">${count}</span>`;
+  } else {
+    btn.classList.remove('has-filters');
+    btn.innerHTML = '&#x2699; Filters';
+  }
+}
+
+function removeFilterTag(type, value) {
+  if (type === 'location') {
+    document.querySelectorAll('#locationChips .chip.selected').forEach(c => {
+      if (c.dataset.value === value) c.classList.remove('selected');
+    });
+  } else if (type === 'cuisine') {
+    document.querySelectorAll('#cuisineChips .chip.selected').forEach(c => {
+      if (c.dataset.value === value) c.classList.remove('selected');
+    });
+  } else if (type === 'price') {
+    document.querySelectorAll('#priceChips .chip.selected').forEach(c => {
+      if (c.dataset.value === value) c.classList.remove('selected');
+    });
+  } else if (type === 'rating') {
+    document.getElementById('filterRating').value = '0';
+    document.getElementById('ratingValue').textContent = '0';
+  }
+  updateActiveFilterTags();
+  doSearch();
+}
 
 /* ─── Auth ─── */
 async function checkAuth() {
@@ -984,10 +1434,9 @@ async function handleLogout() {
 function showApp() {
   document.getElementById('viewLogin').style.display = 'none';
   document.getElementById('appHeader').style.display = 'block';
-  document.getElementById('viewSearch').style.display = 'grid';
+  document.getElementById('viewSearch').style.display = 'block';
   document.getElementById('userName').textContent = currentUser.username;
   document.getElementById('userRole').textContent = currentUser.role;
-  // show admin tab if admin
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
   });
@@ -1007,10 +1456,9 @@ function switchTab(el) {
   el.classList.add('active');
   hideAllViews();
   const view = el.dataset.view;
-  if (view === 'search') document.getElementById('viewSearch').style.display = 'grid';
+  if (view === 'search') document.getElementById('viewSearch').style.display = 'block';
   else if (view === 'saved') { document.getElementById('viewSaved').style.display = 'block'; loadSavedView(); }
   else if (view === 'analytics') { document.getElementById('viewAnalytics').style.display = 'block'; loadAnalytics(); }
-  // close mobile nav
   document.getElementById('navTabs').classList.remove('open');
 }
 
@@ -1018,15 +1466,7 @@ function toggleMobileNav() {
   document.getElementById('navTabs').classList.toggle('open');
 }
 
-function toggleFilters() {
-  document.getElementById('filtersBody').classList.toggle('open');
-}
-
 /* ─── Metadata ─── */
-const VISIBLE_CHIPS = 5;
-let allLocations = [];
-let allCuisines = [];
-
 async function loadMetadata() {
   try {
     const r = await fetch('/metadata', { credentials: 'same-origin' });
@@ -1050,9 +1490,7 @@ function renderChipGroup(containerId, items, groupName) {
   el.innerHTML = html + moreBtn;
 }
 
-function toggleChip(chip) {
-  chip.classList.toggle('selected');
-}
+function toggleChip(chip) { chip.classList.toggle('selected'); }
 
 function toggleShowMore(groupName) {
   const containerId = groupName === 'location' ? 'locationChips' : 'cuisineChips';
@@ -1079,7 +1517,6 @@ function filterChips(groupName) {
   const query = document.getElementById(searchId).value.toLowerCase().trim();
   const el = document.getElementById(containerId);
   const btn = document.getElementById(groupName + 'MoreBtn');
-
   if (query) {
     el.querySelectorAll('.chip').forEach(c => {
       const match = c.dataset.value.toLowerCase().includes(query);
@@ -1104,12 +1541,30 @@ function filterChips(groupName) {
 async function doSearch() {
   const btn = document.getElementById('btnSearch');
   btn.disabled = true;
-  btn.textContent = 'Searching…';
+  btn.classList.add('searching');
   const area = document.getElementById('resultsArea');
   const errArea = document.getElementById('errorArea');
   errArea.style.display = 'none';
-  area.innerHTML = '<div class="loading">Finding the best restaurants for you<div class="loading-dots"><span></span><span></span><span></span></div></div>';
   document.getElementById('resultsHeader').style.display = 'none';
+
+  area.innerHTML = `
+    <div class="loading-message">
+      <span class="loading-icon">&#x1F373;</span>
+      <p>Tasting menu being prepared...</p>
+    </div>
+    <div class="skeleton-grid">
+      ${Array(4).fill(`
+        <div class="skeleton-card">
+          <div class="skeleton-visual"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
 
   const selectedLocations = [...document.querySelectorAll('#locationChips .chip.selected:not(.btn-show-more)')].map(c => c.dataset.value);
   const selectedCuisines = [...document.querySelectorAll('#cuisineChips .chip.selected:not(.btn-show-more)')].map(c => c.dataset.value);
@@ -1122,7 +1577,6 @@ async function doSearch() {
     limit: parseInt(document.getElementById('filterLimit').value) || 5,
     free_text_preferences: document.getElementById('filterFreeText').value || undefined,
   };
-  // Remove undefined keys
   Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
   lastQuery = body;
 
@@ -1143,55 +1597,106 @@ async function doSearch() {
     errArea.innerHTML = `<div class="error-state"><div class="icon">&#x26A0;</div><p>Failed to load recommendations. ${e.message}</p></div>`;
   }
   btn.disabled = false;
-  btn.textContent = 'Find Restaurants';
+  btn.classList.remove('searching');
 }
 
+/* ─── Render Results ─── */
 function renderResults(data) {
   const area = document.getElementById('resultsArea');
   const header = document.getElementById('resultsHeader');
   const recs = data.recommendations || [];
 
   if (!recs.length) {
-    area.innerHTML = '<div class="empty-state"><div class="icon">&#x1F614;</div><p>No restaurants match your criteria. Try broadening your filters.</p></div>';
+    area.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">&#x1F614;</div>
+        <h3>No restaurants found</h3>
+        <p>Try broadening your filters or describing something different</p>
+        <div class="suggested-searches">
+          <button class="occasion-pill" onclick="selectOccasion(this)" data-query="popular restaurants">
+            <span class="pill-emoji">&#x1F525;</span> Popular
+          </button>
+          <button class="occasion-pill" onclick="selectOccasion(this)" data-query="top rated near me">
+            <span class="pill-emoji">&#x2B50;</span> Top Rated
+          </button>
+        </div>
+      </div>`;
     header.style.display = 'none';
     return;
   }
 
   header.style.display = 'flex';
   document.getElementById('resultsMeta').textContent =
-    `${recs.length} result${recs.length > 1 ? 's' : ''} · ${(data.response_time_ms / 1000).toFixed(2)}s`;
+    `${recs.length} result${recs.length > 1 ? 's' : ''} from ${data.total_candidates} candidates`;
   const badge = document.getElementById('variantBadge');
   if (data.variant) { badge.textContent = `Variant ${data.variant}`; badge.style.display = 'inline'; }
   else badge.style.display = 'none';
 
-  area.innerHTML = recs.map((item, i) => {
+  area.innerHTML = '<div class="results-grid">' + recs.map((item, i) => {
     const r = item.restaurant;
-    const cuisines = (r.cuisines || []).map(c => `<span class="tag">${c}</span>`).join('');
+    const cuisines = r.cuisines || [];
+    const emoji = getCuisineEmoji(cuisines);
+    const gradient = getCuisineGradient(cuisines);
     const pct = Math.round(item.score * 100);
     const isFallback = item.reason_source === 'fallback';
+    const isSaved = savedRestaurants.some(s => s.id === r.id);
+
+    const rating = r.avg_rating ?? 0;
+    const fullStars = Math.floor(rating);
+    const halfStar = (rating % 1) >= 0.3;
+    let starsHtml = '';
+    for (let s = 0; s < 5; s++) {
+      if (s < fullStars) starsHtml += '&#x2605;';
+      else if (s === fullStars && halfStar) starsHtml += '&#x2605;';
+      else starsHtml += '&#x2606;';
+    }
+
+    const priceBucket = r.price_bucket || '';
+
     return `
-      <div class="restaurant-card">
-        <h3>${r.name}</h3>
-        <div class="meta">
-          <span>&#x2B50; ${r.avg_rating ?? 'N/A'}</span>
-          <span>&#x1F4B0; ${r.avg_cost_for_two ? '₹' + r.avg_cost_for_two + ' for two' : r.price_bucket}</span>
-          <span>&#x1F4CD; ${r.locality || r.city || 'N/A'}</span>
+      <div class="restaurant-card" style="animation-delay:${i * 60}ms">
+        <div class="card-visual" data-cuisine="${gradient}">
+          <span class="card-visual-emoji">${emoji}</span>
+          <span class="card-price-badge">${priceBucket}${r.avg_cost_for_two ? ' \u00B7 \u20B9' + r.avg_cost_for_two : ''}</span>
         </div>
-        ${r.address ? `<div style="font-size:0.75rem;color:#888;margin-bottom:0.4rem;">&#x1F3E0; ${r.address}</div>` : ''}
-        ${r.address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ', ' + r.address)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;color:#B71C1C;text-decoration:none;margin-bottom:0.5rem;font-weight:500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">&#x1F4CD; View on Google Maps &rarr;</a>` : ''}
-        <div class="tag-row">${cuisines}</div>
-        <div class="score-bar-container">
-          <div class="score-label">Match score: ${pct}%</div>
-          <div class="score-bar"><div class="score-bar-fill" style="width:${pct}%"></div></div>
-        </div>
-        ${item.reason ? `<div class="card-reason${isFallback ? ' fallback' : ''}"><div class="reason-label">${isFallback ? '&#x26A0; Basic Reasoning (LLM unavailable)' : '&#x2728; AI Insight'}</div>${item.reason}</div>` : ''}
-        <div class="feedback-row">
-          <button class="btn-feedback positive" onclick="sendFeedback('${r.id}', true, this)">&#x1F44D; Helpful</button>
-          <button class="btn-feedback negative" onclick="sendFeedback('${r.id}', false, this)">&#x1F44E; Not for me</button>
-          <button class="btn-save${savedRestaurants.some(s => s.id === r.id) ? ' saved' : ''}" data-id="${r.id}" onclick="toggleSave('${r.id}', '${r.name.replace(/'/g,"\\'")}', '${(r.locality||r.city||'').replace(/'/g,"\\'")}', '${r.avg_rating ?? ''}', '${(r.address||'').replace(/'/g,"\\'")}')">${savedRestaurants.some(s => s.id === r.id) ? '&#x2605; Saved' : '&#x2606; Save'}</button>
+        <div class="card-body">
+          <h3>${r.name}</h3>
+          <div class="card-meta">
+            <span class="card-rating">
+              <span class="stars">${starsHtml}</span>
+              <span class="rating-num">${rating.toFixed(1)}</span>
+            </span>
+            <span class="card-location">&#x1F4CD; ${r.locality || r.city || 'N/A'}</span>
+          </div>
+          <div class="card-tags">
+            ${cuisines.map(c => `<span class="card-tag">${c}</span>`).join('')}
+          </div>
+          <div class="card-match">
+            <div class="match-circle" style="--score:${pct}">
+              <span class="match-num">${pct}%</span>
+            </div>
+            <span class="match-label">Match Score</span>
+          </div>
+          ${item.reason ? `
+            <div class="card-ai-insight${isFallback ? ' fallback' : ''}">
+              <div class="insight-label">
+                ${isFallback ? '&#x26A0; Basic Match' : '&#x2728; AI Insight'}
+              </div>
+              ${item.reason}
+            </div>` : ''}
+          <div class="card-actions">
+            <button class="btn-heart${isSaved ? ' saved' : ''}" data-id="${r.id}"
+              onclick="toggleSave('${r.id}','${r.name.replace(/'/g,"\\'")}','${(r.locality||r.city||'').replace(/'/g,"\\'")}','${r.avg_rating ?? ''}','${(r.address||'').replace(/'/g,"\\'")}')"
+              aria-label="${isSaved ? 'Unsave' : 'Save'}">
+              ${isSaved ? '&#x2764;' : '&#x2661;'}
+            </button>
+            <button class="btn-card-action positive" onclick="sendFeedback('${r.id}',true,this)">&#x1F44D;</button>
+            <button class="btn-card-action negative" onclick="sendFeedback('${r.id}',false,this)">&#x1F44E;</button>
+            ${r.address ? `<a class="btn-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ', ' + r.address)}" target="_blank" rel="noopener">&#x1F4CD; Maps</a>` : ''}
+          </div>
         </div>
       </div>`;
-  }).join('');
+  }).join('') + '</div>';
 }
 
 function toggleSort() {
@@ -1205,7 +1710,7 @@ function toggleSort() {
 /* ─── Feedback ─── */
 async function sendFeedback(restaurantId, isPositive, btn) {
   const row = btn.parentElement;
-  row.querySelectorAll('.btn-feedback').forEach(b => b.classList.remove('voted'));
+  row.querySelectorAll('.btn-card-action').forEach(b => b.classList.remove('voted'));
   btn.classList.add('voted');
   try {
     const body = {
@@ -1220,7 +1725,7 @@ async function sendFeedback(restaurantId, isPositive, btn) {
       credentials: 'same-origin',
       body: JSON.stringify(body),
     });
-    showToast(isPositive ? 'Thanks for the feedback!' : 'Got it — we\'ll improve!');
+    showToast(isPositive ? 'Thanks for the feedback!' : 'Got it \u2014 we\'ll improve!');
   } catch (_) {}
 }
 
@@ -1251,26 +1756,46 @@ function loadShared() {
   if (params.has('free_text_preferences')) document.getElementById('filterFreeText').value = params.get('free_text_preferences');
 }
 
-async function loadSaved() {
-  try {
-    const r = await fetch('/share?list=1', { credentials: 'same-origin' });
-    if (!r.ok) return;
-    const data = await r.json();
-    const el = document.getElementById('savedList');
-    if (!data.length) {
-      el.innerHTML = '<div class="saved-empty"><div class="icon" style="font-size:2rem;">&#x1F516;</div><p>No saved recommendations yet.</p></div>';
-      return;
-    }
-    el.innerHTML = data.map(s => `
-      <div class="restaurant-card">
-        <h3>${s.label || 'Saved Search'}</h3>
-        <div class="meta">${s.location || ''} · ${s.created || ''}</div>
-        <a href="/share?${s.params}" style="color:#B71C1C;font-size:0.85rem;">View results →</a>
-      </div>
-    `).join('');
-  } catch (_) {
-    document.getElementById('savedList').innerHTML = '<div class="saved-empty"><p>Could not load saved items.</p></div>';
+/* ─── Save / Bookmark ─── */
+function toggleSave(id, name, locality, rating, address) {
+  const idx = savedRestaurants.findIndex(r => r.id === id);
+  if (idx >= 0) {
+    savedRestaurants.splice(idx, 1);
+    showToast('Removed from saved');
+  } else {
+    savedRestaurants.push({ id, name, locality, rating, address: address || '', savedAt: new Date().toLocaleDateString() });
+    showToast('Saved to favorites!');
   }
+  localStorage.setItem('savedRestaurants', JSON.stringify(savedRestaurants));
+  document.querySelectorAll(`.btn-heart[data-id="${id}"]`).forEach(b => {
+    const isSaved = savedRestaurants.some(r => r.id === id);
+    b.classList.toggle('saved', isSaved);
+    b.innerHTML = isSaved ? '&#x2764;' : '&#x2661;';
+  });
+}
+
+function loadSavedView() {
+  const el = document.getElementById('savedList');
+  if (!savedRestaurants.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="icon">&#x2764;</div>
+      <h3>No saved restaurants yet</h3>
+      <p>Tap the heart on any restaurant card to save it here</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = '<div class="saved-grid">' + savedRestaurants.map(r => `
+    <div class="saved-card">
+      <h3>${r.name}</h3>
+      <div class="meta">
+        <span>&#x2B50; ${r.rating || 'N/A'}</span>
+        <span>&#x1F4CD; ${r.locality || 'N/A'}</span>
+        <span>Saved ${r.savedAt}</span>
+      </div>
+      ${r.address ? `<a class="btn-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ', ' + r.address)}" target="_blank" rel="noopener" style="margin-bottom:0.5rem;">&#x1F4CD; View on Maps</a>` : ''}
+      <button class="btn-remove" onclick="toggleSave('${r.id}','','','',''); loadSavedView();">Remove</button>
+    </div>
+  `).join('') + '</div>';
 }
 
 /* ─── Analytics ─── */
@@ -1286,7 +1811,6 @@ async function loadAnalytics() {
       fetchJson('/ab-test/results'),
       fetchJson('/cache/stats'),
     ]);
-
     renderStatCards(analytics, feedback, cache);
     renderCharts(analytics, feedback);
     renderABResults(abTest);
@@ -1299,63 +1823,56 @@ async function loadAnalytics() {
 }
 
 function renderStatCards(a, fb, cache) {
-  const el = document.getElementById('statsCards');
-  el.innerHTML = `
+  document.getElementById('statsCards').innerHTML = `
     <div class="stat-card"><div class="value">${a.total_searches || 0}</div><div class="label">Total Searches</div></div>
-    <div class="stat-card"><div class="value">${a.avg_response_time_ms ? (a.avg_response_time_ms / 1000).toFixed(2) + 's' : '—'}</div><div class="label">Avg Response</div></div>
+    <div class="stat-card"><div class="value">${a.avg_response_time_ms ? (a.avg_response_time_ms / 1000).toFixed(2) + 's' : '\u2014'}</div><div class="label">Avg Response</div></div>
     <div class="stat-card"><div class="value">${fb.total || 0}</div><div class="label">Feedback Items</div></div>
     <div class="stat-card"><div class="value">${fb.satisfaction_rate || 0}%</div><div class="label">Satisfaction</div></div>
-    <div class="stat-card"><div class="value">${cache.hit_rate ?? '—'}${typeof cache.hit_rate === 'number' ? '%' : ''}</div><div class="label">Cache Hit Rate</div></div>
+    <div class="stat-card"><div class="value">${cache.hit_rate ?? '\u2014'}${typeof cache.hit_rate === 'number' ? '%' : ''}</div><div class="label">Cache Hit Rate</div></div>
   `;
 }
 
 function renderCharts(a, fb) {
-  // Destroy old charts
   Object.values(chartInstances).forEach(c => c.destroy());
   chartInstances = {};
 
-  const redPalette = ['#B71C1C','#C62828','#D32F2F','#E53935','#EF5350','#EF9A9A','#FFCDD2','#FFEBEE'];
-  const defaultFont = { family: "'Inter', sans-serif", size: 11 };
+  const warmPalette = ['#D4621B','#722F37','#F5A623','#8D6E63','#E8853A','#5A7247','#B5510F','#9B8A7D','#C0392B','#FBBF4E'];
+  const defaultFont = { family: "'DM Sans', sans-serif", size: 11 };
 
-  // Locations
   const locs = a.top_locations || [];
   chartInstances.locations = new Chart(document.getElementById('chartLocations'), {
     type: 'bar',
     data: {
       labels: locs.map(l => l.name || l[0]),
-      datasets: [{ data: locs.map(l => l.count || l[1]), backgroundColor: '#B71C1C', borderRadius: 4 }],
+      datasets: [{ data: locs.map(l => l.count || l[1]), backgroundColor: '#D4621B', borderRadius: 4 }],
     },
     options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: { x: { ticks: { font: defaultFont } }, y: { ticks: { font: defaultFont } } },
     },
   });
 
-  // Cuisines
   const cuis = a.top_cuisines || [];
   chartInstances.cuisines = new Chart(document.getElementById('chartCuisines'), {
     type: 'bar',
     data: {
       labels: cuis.map(c => c.name || c[0]),
-      datasets: [{ data: cuis.map(c => c.count || c[1]), backgroundColor: '#C62828', borderRadius: 4 }],
+      datasets: [{ data: cuis.map(c => c.count || c[1]), backgroundColor: '#722F37', borderRadius: 4 }],
     },
     options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: { x: { ticks: { font: defaultFont } }, y: { ticks: { font: defaultFont } } },
     },
   });
 
-  // Prices
   const prices = a.price_range_usage || a.price_distribution || {};
   chartInstances.prices = new Chart(document.getElementById('chartPrices'), {
     type: 'doughnut',
     data: {
       labels: Object.keys(prices),
-      datasets: [{ data: Object.values(prices), backgroundColor: redPalette.slice(0, Object.keys(prices).length) }],
+      datasets: [{ data: Object.values(prices), backgroundColor: warmPalette.slice(0, Object.keys(prices).length) }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -1363,12 +1880,11 @@ function renderCharts(a, fb) {
     },
   });
 
-  // Feedback
   chartInstances.feedback = new Chart(document.getElementById('chartFeedback'), {
     type: 'pie',
     data: {
       labels: ['Positive', 'Negative'],
-      datasets: [{ data: [fb.positive || 0, fb.negative || 0], backgroundColor: ['#43A047', '#E53935'] }],
+      datasets: [{ data: [fb.positive || 0, fb.negative || 0], backgroundColor: ['#5A7247', '#C0392B'] }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -1397,8 +1913,8 @@ function renderABResults(ab) {
         <div class="variant-stat">Total Assignments: <strong>${ab.total_assignments ?? 0}</strong></div>
         <div class="variant-stat">Searches: <strong>${s.searches ?? 0}</strong></div>
         <div class="variant-stat">Feedback: <strong>${r.positive ?? s.feedback_positive ?? 0}</strong> &#x1F44D; / <strong>${r.total_feedback ? r.total_feedback - (r.positive || 0) : s.feedback_negative ?? 0}</strong> &#x1F44E;</div>
-        <div class="satisfaction ${satClass}">${satRate != null ? satRate + '%' : '—'}</div>
-        <div class="variant-stat" style="font-size:0.72rem;color:#aaa;">satisfaction</div>
+        <div class="satisfaction ${satClass}">${satRate != null ? satRate + '%' : '\u2014'}</div>
+        <div class="variant-stat" style="font-size:0.72rem;color:var(--clr-text-light);">satisfaction</div>
       </div>`;
   }).join('');
 }
@@ -1422,14 +1938,16 @@ function showToast(msg) {
 
 /* ─── Animated Placeholder ─── */
 const placeholderSuggestions = [
-  'romantic Italian dinner for two',
-  'cheap street food in Koramangala',
-  'rooftop cafe with a view',
-  'spicy North Indian thali',
-  'cozy breakfast spot with coffee',
-  'best biryani in Bangalore',
-  'family-friendly Chinese restaurant',
-  'late-night pizza place',
+  'romantic Italian dinner for two...',
+  'cheap street food in Koramangala...',
+  'rooftop cafe with a great view...',
+  'spicy North Indian thali under 500...',
+  'cozy breakfast spot with good coffee...',
+  'best biryani in Bangalore...',
+  'family-friendly place for Sunday brunch...',
+  'late-night pizza near Indiranagar...',
+  'healthy salad bar in HSR...',
+  'birthday celebration with private dining...',
 ];
 let phIdx = 0, phCharIdx = 0, phTyping = true, phTimer = null;
 function animatePlaceholder() {
@@ -1457,7 +1975,6 @@ function animatePlaceholder() {
     phTimer = setTimeout(animatePlaceholder, 30);
   }
 }
-// Restart animation when user leaves the field empty
 document.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById('filterFreeText');
   if (el) {
@@ -1466,46 +1983,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 setTimeout(animatePlaceholder, 1000);
-
-/* ─── Save / Bookmark ─── */
-let savedRestaurants = JSON.parse(localStorage.getItem('savedRestaurants') || '[]');
-
-function toggleSave(id, name, locality, rating, address) {
-  const idx = savedRestaurants.findIndex(r => r.id === id);
-  if (idx >= 0) {
-    savedRestaurants.splice(idx, 1);
-    showToast('Removed from saved');
-  } else {
-    savedRestaurants.push({ id, name, locality, rating, address: address || '', savedAt: new Date().toLocaleDateString() });
-    showToast('Saved!');
-  }
-  localStorage.setItem('savedRestaurants', JSON.stringify(savedRestaurants));
-  // Update button state in DOM
-  document.querySelectorAll(`.btn-save[data-id="${id}"]`).forEach(b => {
-    b.classList.toggle('saved', savedRestaurants.some(r => r.id === id));
-    b.innerHTML = savedRestaurants.some(r => r.id === id) ? '&#x2605; Saved' : '&#x2606; Save';
-  });
-}
-
-function loadSavedView() {
-  const el = document.getElementById('savedList');
-  if (!savedRestaurants.length) {
-    el.innerHTML = '<div class="saved-empty"><div class="icon" style="font-size:2rem;">&#x1F516;</div><p>No saved restaurants yet. Hit the Save button on any result!</p></div>';
-    return;
-  }
-  el.innerHTML = savedRestaurants.map(r => `
-    <div class="restaurant-card">
-      <h3>${r.name}</h3>
-      <div class="meta">
-        <span>&#x2B50; ${r.rating ?? 'N/A'}</span>
-        <span>&#x1F4CD; ${r.locality || 'N/A'}</span>
-        <span>Saved ${r.savedAt}</span>
-      </div>
-      ${r.address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ', ' + r.address)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;color:#B71C1C;text-decoration:none;margin-bottom:0.5rem;font-weight:500;">&#x1F4CD; View on Google Maps &rarr;</a>` : ''}
-      <button class="btn-feedback negative" onclick="toggleSave('${r.id}','','','',''); loadSavedView();">Remove</button>
-    </div>
-  `).join('');
-}
 
 /* ─── Init ─── */
 checkAuth();
