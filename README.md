@@ -1,232 +1,198 @@
-# AI Restaurant Recommendation Service
+# FoodieAI — AI-Powered Restaurant Discovery Engine
 
-An AI-powered restaurant recommendation engine for Bangalore, built with FastAPI, Groq LLM, and sentence-transformers. Takes user preferences (location, price, rating, cuisine, free-text vibes) and returns ranked, LLM-explained restaurant recommendations from a 51,000+ restaurant dataset. Features role-based authentication, an admin analytics dashboard with Chart.js, A/B testing with session persistence and winner detection, user feedback loop, and caching layer.
+An intent-driven restaurant recommendation system for Bangalore that replaces traditional filter-based search with conversational AI. Users type natural language like *"romantic Italian dinner in Koramangala under ₹1500"* and get ranked, LLM-explained results. Built with FastAPI, Groq LLM (Llama 3.3 70B), and sentence-transformers on a 51,000+ restaurant dataset.
+
+**Live Demo:** [Deployed on Vercel](https://gen-ai-project.vercel.app) | **Login:** `user/user123` or `admin/admin123`
 
 ## How It Works
 
 ```
-User Login (session cookie)
-       |
-       v
-User Preferences
-       |
-       v
-  [Hard Filters]          -- location, price bucket, min rating, cuisine match
-       |
-       v
-  [A/B Variant Assignment] -- session-persistent variant (A or B)
-       |
-       v
-  [Cache Check]            -- return cached result if available (5min TTL)
-       |
-       v
-  [Heuristic Scoring]     -- weighted rating + cuisine match + price alignment
-       |
-       v
-  [Semantic Search]        -- sentence-transformers embeddings for free-text "vibes"
-       |
-       v
-  [Groq LLM Re-ranking]   -- Llama 3.3 re-ranks top candidates + generates explanations
-       |
-       v
-  [Analytics Recording]    -- track search, response time, filters used
-       |
-       v
-  Ranked Recommendations with Explanations + Variant Tag
+User Message: "romantic Italian dinner in Koramangala under ₹1500"
+       │
+       ▼
+  [Intent Extraction]      ── Groq LLM parses: location, cuisines, mood, price, occasion
+       │
+       ├─ Low confidence? ──→ [Clarification] → "Which area are you looking at?"
+       │                         (multi-turn conversation state in session)
+       ▼
+  [Map Intent → Filters]   ── location, price buckets, cuisines, free-text preferences
+       │
+       ▼
+  [Hard Filters]            ── location, price bucket, min rating, cuisine match
+       │
+       ▼
+  [A/B Variant Assignment]  ── session-persistent variant (A: rating-heavy, B: balanced)
+       │
+       ▼
+  [Cache Check]             ── SHA256-hashed query key, 5-min TTL
+       │
+       ▼
+  [Heuristic Scoring]       ── weighted rating + cuisine match + price alignment
+       │
+       ▼
+  [Semantic Search]          ── 384-dim sentence-transformer embeddings for "vibe" matching
+       │
+       ▼
+  [Groq LLM Re-ranking]     ── Llama 3.3 re-ranks top candidates + writes explanations
+       │
+       ▼
+  Ranked Recommendations with AI Explanations
 ```
 
 ## Features
 
-### Authentication & Authorization
-- **Session-based Auth** — Login/logout with secure cookie sessions (FastAPI + Starlette SessionMiddleware)
-- **Role-based Access** — User role sees Search + Saved; Admin role unlocks Analytics dashboard
-- **Bcrypt Password Hashing** — Passwords stored as bcrypt hashes, never plaintext
-- **Route Protection** — Middleware enforces 401 (unauthenticated) and 403 (insufficient role) on protected endpoints
-- **Demo Accounts** — Pre-seeded `user/user123` (standard) and `admin/admin123` (admin)
+### Conversational AI Chat Layer
+- **Natural Language Search** — Type "quiet cafe with wifi near BTM" instead of filling filter forms
+- **LLM Intent Extraction** — Groq extracts structured preferences (location, cuisines, mood, occasion, price, vibe) from free-text
+- **Confidence-Gated Clarification** — Vague queries trigger a follow-up question; specific queries skip straight to results
+- **Multi-Turn Conversation** — State accumulates across messages (session cookie); "something romantic" → "Italian in Koramangala" merges both intents
+- **Graceful Degradation** — If LLM fails, raw message flows into existing pipeline as free-text preferences
 
 ### Core Recommendation Engine
-- **Smart Filtering** — Filter by 30 Bangalore areas, 4 price tiers, rating threshold, and 107 cuisine types
-- **Semantic Search** — Free-text queries like "romantic rooftop dinner" influence results via embedding similarity
-- **LLM Explanations** — Groq-powered Llama 3.3 re-ranks candidates and writes a short reason for each pick
-- **Graceful Fallback** — If LLM fails, heuristic ranking is served without explanations
+- **Smart Filtering** — 30 Bangalore areas, 4 price tiers, 107 cuisine types, rating threshold
+- **Semantic Search** — Free-text queries influence results via embedding cosine similarity (50% heuristic + 50% semantic)
+- **LLM Explanations** — Groq re-ranks candidates and writes a one-sentence reason for each pick
+- **Price Sentiment Mapping** — "cheap" → $, "under 500 per person" → $/$$/$$$ via regex + keyword matching
 
 ### Product & Growth Features
-- **Admin Dashboard** — Chart.js visualizations: top locations, top cuisines, price distribution, feedback breakdown
-- **A/B Testing Framework** — Session-persistent variant assignment; per-variant satisfaction tracking; automatic winner detection (>= 5% difference)
-- **User Feedback Loop** — Thumbs up/down on each recommendation; satisfaction rate tracked per variant
-- **Caching Layer** — TTL-based cache (5min) reduces repeat query latency; hit/miss rate visible in admin dashboard
-- **Shareable Links** — Copy a URL with search parameters pre-filled; recipient sees auto-populated results
+- **A/B Testing Framework** — Session-persistent variant assignment; per-variant satisfaction tracking; winner detection
+- **Admin Analytics Dashboard** — Chart.js visualizations: top locations, cuisines, price distribution, feedback breakdown
+- **User Feedback Loop** — Thumbs up/down per recommendation; satisfaction rate tracked per variant
+- **Caching Layer** — SHA256 TTL cache (5min); hit/miss rate in admin dashboard
+- **Save & Share** — Heart-save restaurants to local storage; shareable search URLs
 
-### A/B Testing Explained
-The system runs a **scoring weights experiment** with two variants:
-- **Variant A** (Rating-heavy): Rating weight = 0.6, cuisine = 0.25, price = 0.15
-- **Variant B** (Balanced): Rating weight = 0.4, cuisine = 0.35, price = 0.25
+### Authentication & Authorization
+- **Session-based Auth** — Secure cookie sessions (Starlette SessionMiddleware)
+- **Role-based Access** — User sees Search + Saved; Admin unlocks Analytics dashboard
+- **Bcrypt Password Hashing** — Passwords stored as bcrypt hashes
+- **Route Protection** — 401 (unauthenticated) and 403 (insufficient role) enforcement
 
-Each user session is assigned one variant on their first search. The variant persists across all searches in that session. Feedback (thumbs up/down) is tracked per variant. When one variant's satisfaction rate exceeds the other by >= 5%, the admin dashboard shows a **"Winner" badge**.
-
-### Frontend
-- **Red/White SaaS Theme** — Clean, professional design with `#B71C1C` primary and white backgrounds
-- **Login Page** — Username/password form with demo credentials hint
-- **Mobile-First Responsive** — Hamburger navigation, collapsible filters, stacked cards on mobile
-- **Chart.js Admin Dashboard** — Horizontal bars, doughnut charts, pie charts for analytics
-- **Touch-Friendly** — 44px minimum tap targets throughout
+### Frontend (Mobile-First)
+- **Warm Food-Inspired Theme** — Terracotta/burgundy/golden palette with Playfair Display + DM Sans fonts
+- **Hero Conversational Search** — "What are you craving tonight?" with occasion quick-select pills (Date Night, Birthday, Work Cafe, etc.)
+- **Restaurant Cards** — Cuisine-themed gradient headers, emoji overlays, star ratings, circular match score, AI insight chat bubbles
+- **Collapsible Filters** — Apply/Clear buttons, active filter tags, chip-based selection with search
+- **Skeleton Loading** — Shimmer animations during API calls
+- **Responsive Breakpoints** — 480px, 768px, 1400px with horizontally-scrolling pills and bottom-sheet filters on mobile
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | API | FastAPI + Uvicorn |
-| Auth | bcrypt + Starlette SessionMiddleware (itsdangerous) |
-| LLM | Groq (Llama 3.3 70B) |
-| Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
+| Auth | bcrypt + Starlette SessionMiddleware |
+| LLM | Groq (Llama 3.3 70B Versatile) |
+| Embeddings | sentence-transformers (all-MiniLM-L6-v2, 384-dim) |
 | Data | Pandas (in-memory), Hugging Face Datasets |
 | Frontend | Vanilla HTML/CSS/JS + Chart.js |
-| Testing | pytest (52 tests) |
+| Deployment | Vercel (serverless) |
+| Testing | pytest (74 tests) |
 
 ## Project Structure
 
 ```
-.
-├── ARCHITECTURE.md                          # Detailed system design document
-├── requirements.txt                         # Python dependencies
 ├── backend/
-│   ├── app.py                               # FastAPI app (14 endpoints, SessionMiddleware)
-│   ├── static/
-│   │   └── index.html                       # Frontend UI (Login + Search + Saved + Analytics)
+│   ├── app.py                          # FastAPI app (15 endpoints)
+│   ├── static/index.html               # Frontend (Login + Search + Saved + Analytics)
 │   ├── auth/
-│   │   ├── __init__.py                      # Package init
-│   │   ├── users.py                         # In-memory user store with bcrypt, authenticate()
-│   │   └── dependencies.py                  # require_user(), require_admin() — FastAPI Depends
+│   │   ├── users.py                    # User store with bcrypt
+│   │   └── dependencies.py             # require_user(), require_admin()
+│   ├── chat/                           # NEW — Conversational AI layer
+│   │   ├── models.py                   # ChatRequest, ChatResponse, ExtractedIntent, ConversationState
+│   │   └── intent.py                   # Intent extraction, clarification, price mapping, accumulation
 │   ├── analytics/
-│   │   ├── store.py                         # In-memory event store for search tracking
-│   │   ├── aggregator.py                    # Computes summary stats from events
-│   │   └── feedback.py                      # In-memory feedback store (thumbs up/down)
+│   │   ├── store.py                    # Event store
+│   │   ├── aggregator.py              # Summary stats
+│   │   └── feedback.py                # Feedback store
 │   ├── ab_testing/
-│   │   └── experiments.py                   # Variant assignment (session-persistent), winner detection
+│   │   └── experiments.py             # Variant assignment, winner detection
 │   ├── data_ingestion/
-│   │   ├── config.py                        # Ingestion config (dataset name, paths)
-│   │   └── ingest.py                        # Downloads Zomato dataset from HuggingFace, normalizes to canonical schema
+│   │   └── ingest.py                  # Downloads Zomato dataset from HuggingFace
 │   ├── embeddings/
-│   │   ├── config.py                        # Embedding model config (all-MiniLM-L6-v2, 384-dim)
-│   │   ├── encoder.py                       # Loads model, encodes text to vectors
-│   │   └── precompute.py                    # Offline script to embed all 51k restaurants
+│   │   ├── encoder.py                 # Text → 384-dim vectors
+│   │   └── precompute.py             # Offline embedding script
 │   ├── llm/
-│   │   ├── config.py                        # Groq API config (key, model, timeout, feature flag)
-│   │   └── groq_client.py                   # Builds prompt, calls Groq, parses JSON response
+│   │   ├── config.py                  # Groq API config
+│   │   └── groq_client.py            # LLM re-ranking + explanations
 │   ├── recommendations/
-│   │   ├── models.py                        # Pydantic request/response schemas (+ LoginRequest)
-│   │   ├── data_store.py                    # Loads CSV + embeddings into memory (singleton)
-│   │   ├── retrieval.py                     # Filter → score → semantic → LLM → response pipeline
-│   │   └── cache.py                         # Dict-based TTL cache with hit/miss tracking
-│   └── tests/
-│       ├── test_auth.py                     # Auth/login/role tests (16 tests)
-│       ├── test_ingestion.py                # Dataset ingestion tests (1 test)
-│       ├── test_recommendations.py          # API endpoint tests (10 tests)
-│       ├── test_llm.py                      # Groq client tests with mocks (5 tests)
-│       ├── test_embeddings.py               # Semantic search tests (4 tests)
-│       ├── test_analytics.py                # Analytics tracking tests (4 tests)
-│       ├── test_feedback.py                 # Feedback endpoint tests (4 tests)
-│       ├── test_cache.py                    # Cache layer tests (3 tests)
-│       └── test_ab_testing.py               # A/B testing tests (5 tests)
-└── backend/data/processed/                  # Generated data (gitignored)
-    ├── restaurants.csv                      # 51,717 normalized restaurants
-    └── embeddings.npy                       # Precomputed embedding vectors (76MB)
+│   │   ├── models.py                  # Pydantic schemas
+│   │   ├── data_store.py             # CSV + embeddings loader
+│   │   ├── retrieval.py              # Filter → score → semantic → LLM pipeline
+│   │   └── cache.py                  # TTL cache with hit/miss tracking
+│   └── tests/                         # 74 tests
+│       ├── test_chat.py               # Chat layer tests (22 tests)
+│       ├── test_auth.py               # Auth/role tests (16 tests)
+│       ├── test_recommendations.py    # API tests (10 tests)
+│       ├── test_llm.py               # Groq client tests (5 tests)
+│       ├── test_ab_testing.py         # A/B testing tests (5 tests)
+│       ├── test_embeddings.py         # Semantic search tests (4 tests)
+│       ├── test_analytics.py          # Analytics tests (4 tests)
+│       ├── test_feedback.py           # Feedback tests (4 tests)
+│       ├── test_cache.py             # Cache tests (3 tests)
+│       └── test_ingestion.py          # Ingestion test (1 test)
+└── backend/data/processed/            # Generated (gitignored)
+    ├── restaurants.csv                # 51,717 restaurants
+    └── embeddings.npy                 # Precomputed vectors (76MB)
 ```
 
 ## Quick Start
 
-### 1. Install dependencies
-
 ```bash
+# 1. Install dependencies
 pip install -r requirements.txt
-```
 
-### 2. Set up environment
+# 2. Set up environment (.env file in project root)
+GROQ_API_KEY=your_groq_api_key_here  # Free at console.groq.com
 
-Create a `.env` file in the project root:
-
-```
-GROQ_API_KEY=your_groq_api_key_here
-```
-
-Get a free API key at [console.groq.com](https://console.groq.com).
-
-### 3. Ingest the dataset
-
-Downloads the Zomato dataset from Hugging Face and normalizes it into a canonical schema:
-
-```bash
+# 3. Ingest dataset
 python -m backend.data_ingestion.ingest
-```
 
-This creates `backend/data/processed/restaurants.csv` with 51,717 restaurants.
-
-### 4. Precompute embeddings
-
-Embeds all restaurants using sentence-transformers for semantic search:
-
-```bash
+# 4. Precompute embeddings
 python -m backend.embeddings.precompute
-```
 
-This creates `backend/data/processed/embeddings.npy` (~76MB).
-
-### 5. Run the server
-
-```bash
+# 5. Run server
 uvicorn backend.app:app --reload
 ```
 
-Open **http://localhost:8000** in your browser. Log in with `user/user123` or `admin/admin123`.
+Open **http://localhost:8000** — login with `user/user123` or `admin/admin123`.
 
 ## API Reference
 
-### Authentication
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/auth/login` | Public | Authenticate and create session |
-| POST | `/auth/logout` | Public | Clear session |
-| GET | `/auth/me` | User | Return current user info |
-
-**Login request:**
-```json
-{ "username": "user", "password": "user123" }
-```
-
-**Login response:**
-```json
-{ "status": "ok", "user": { "username": "user", "role": "user" } }
-```
-
-### Public Endpoints
-
+### Public
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/health` | Health check |
 | GET | `/metadata` | Available locations and cuisines |
-| GET | `/` | Serve frontend |
-| GET | `/share` | Shareable search link |
 
-### Protected Endpoints (User)
-
+### Auth
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/recommendations` | Get restaurant recommendations |
-| POST | `/feedback` | Submit thumbs up/down feedback |
+| POST | `/auth/login` | Authenticate and create session |
+| POST | `/auth/logout` | Clear session |
+| GET | `/auth/me` | Current user info |
 
-### Admin-Only Endpoints
-
+### User (requires login)
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/analytics` | Search analytics dashboard data |
-| GET | `/feedback/stats` | Feedback summary stats |
-| GET | `/cache/stats` | Cache performance metrics |
-| GET | `/ab-test/results` | A/B experiment results + winner |
+| POST | `/recommendations` | Filter-based recommendations |
+| POST | `/chat` | **Conversational AI search** |
+| POST | `/feedback` | Thumbs up/down feedback |
+
+### Admin
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/analytics` | Search analytics data |
+| GET | `/feedback/stats` | Feedback summary |
+| GET | `/cache/stats` | Cache performance |
+| GET | `/ab-test/results` | A/B experiment results |
+
+### `POST /chat` (NEW)
+```json
+{ "message": "romantic Italian dinner in Koramangala under 1500" }
+```
+Returns `type: "results"` with recommendations, or `type: "clarification"` with a follow-up question.
 
 ### `POST /recommendations`
-
-**Request body:**
 ```json
 {
   "location": "Koramangala",
@@ -238,48 +204,21 @@ Open **http://localhost:8000** in your browser. Log in with `user/user123` or `a
 }
 ```
 
-**Response** includes `recommendations` (with score, reason, variant) and `total_candidates`.
-
-### `POST /feedback`
-```json
-{
-  "restaurant_id": "42",
-  "query_location": "BTM",
-  "is_positive": true,
-  "variant": "A"
-}
-```
-
 ## Running Tests
 
 ```bash
 pytest backend/tests/ -v
 ```
 
-All 52 tests cover:
-- **Authentication** — login/logout, role checks, route protection (401/403)
-- **Dataset ingestion** — HuggingFace download and normalization
-- **API endpoints** — filtering, scoring, response format
-- **Groq LLM client** — prompt building, response parsing (mocked)
-- **Semantic search** — embedding similarity ranking
-- **Analytics** — event tracking and aggregation
-- **Feedback** — recording and satisfaction stats
-- **Cache** — hit/miss behavior and stats endpoint
-- **A/B testing** — variant assignment, weight differentiation, results endpoint
+**74 tests** covering: authentication, chat layer, recommendations, LLM client, semantic search, analytics, feedback, cache, A/B testing, and data ingestion.
 
 ## Dataset
 
-Uses the [ManikaSaini/zomato-restaurant-recommendation](https://huggingface.co/datasets/ManikaSaini/zomato-restaurant-recommendation) dataset from Hugging Face.
+[ManikaSaini/zomato-restaurant-recommendation](https://huggingface.co/datasets/ManikaSaini/zomato-restaurant-recommendation) from Hugging Face.
 
 | Stat | Value |
 |------|-------|
 | Total restaurants | 51,717 |
-| City areas | 30 (all Bangalore) |
-| Localities | 93 |
+| City areas | 30 (Bangalore) |
 | Cuisine types | 107 |
 | Price buckets | 4 ($, $$, $$$, $$$$) |
-| Rating range | 1.8 - 5.0 |
-
-## Architecture
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system design, data model, request-response flow, LLM prompt strategy, and phase-wise development plan.
